@@ -5,19 +5,66 @@ export const runtime = "nodejs";
 
 function offlineState(query: string): RtiState {
   const normalizedQuery = query.toLowerCase();
-  const preset = normalizedQuery.match(/pension|gratuity|epfo|credited/)
-    ? { domain: "pension" as const, goal: "Understand pension payment delay and file movement" }
-    : normalizedQuery.match(/scholarship|merit|stipend|disbursement/)
-    ? { domain: "scholarship" as const, goal: "Obtain official sanction and disbursement records for scholarship" }
-    : normalizedQuery.match(/road|ward|pothole|tender|contractor/)
-    ? { domain: "infrastructure" as const, goal: "Inspect road repair tender status and contractor execution" }
-    : { domain: "civic" as const, goal: "Obtain official public records and inspection logs for civic service request" };
+
+  if (normalizedQuery.match(/tree|forest|environment|felling|plantation/)) {
+    return {
+      ...defaultUniversalState,
+      question: query.trim() || "How many trees did the forest department cut in 2023?",
+      domain: "general",
+      goal: "Obtain certified tree felling sanction orders, counts, and compensatory afforestation logs",
+      publicAuthority: "Department of Forests & Wildlife",
+      jurisdiction: "State",
+      suitabilityReason: "RTI Act Section 2(f) entitles citizens to official permissions, felling logs, and plantation audit records.",
+      restructuredRequests: [
+        "Certified copy of official permission/sanction orders issued for felling trees during the year 2023.",
+        "Total official count and species breakdown of trees cut by or under approval of the Forest Department in 2023.",
+        "Certified copy of the compensatory afforestation plan and sapling plantation audit register for 2023.",
+        "Inspection reports and contractor execution logs relating to tree clearance projects in 2023."
+      ],
+      authorityConfidence: 96,
+      healthScore: 92,
+      characterCount: query.length,
+    };
+  }
+
+  if (normalizedQuery.match(/pension|gratuity|epfo|credited/)) {
+    return {
+      ...defaultUniversalState,
+      question: query.trim(),
+      domain: "pension",
+      goal: "Obtain official sanction, audit, and disbursement records for delayed pension",
+      publicAuthority: "Employees' Provident Fund Organisation (EPFO) / Pension Directorate",
+      jurisdiction: "Central",
+      suitabilityReason: "RTI allows inspection of daily progress notings and sanction registers regarding pending claim settlements.",
+      restructuredRequests: [
+        "Daily progress report and file notings on pension application from date of receipt to current date.",
+        "Certified copy of internal sanction order and reason recorded for payment delay.",
+        "Name and designation of the processing officer who withheld the file beyond statutory time limits.",
+        "Audit trail of electronic fund transfer attempts and bank reconciliation statements."
+      ],
+      authorityConfidence: 95,
+      healthScore: 90,
+      characterCount: query.length,
+    };
+  }
 
   return {
     ...defaultUniversalState,
     question: query.trim() || defaultUniversalState.question,
-    domain: preset.domain,
-    goal: preset.goal,
+    domain: "civic",
+    goal: "Obtain certified public works records, tender sanctions, and inspection registers",
+    publicAuthority: "Municipal Corporation / Public Works Department",
+    jurisdiction: "Municipal",
+    suitabilityReason: "Public infrastructure contracts and measurement books are accessible public records under Section 2(f).",
+    restructuredRequests: [
+      "Certified copy of the work order, technical sanction, and tender document.",
+      "Name and contact details of the contractor awarded the contract.",
+      "Certified copies of Measurement Book (MB) entries and completion certificates.",
+      "Quality control inspection registers and delay penalty correspondence notings."
+    ],
+    authorityConfidence: 92,
+    healthScore: 88,
+    characterCount: query.length,
   };
 }
 
@@ -29,9 +76,12 @@ function normalizeResult(query: string, result: Partial<RtiState>): RtiState {
   return {
     ...fallback,
     ...result,
-    question: query.trim(),
+    question: query.trim() || fallback.question,
     domain: domains.includes(result.domain as RequestDomain) ? (result.domain as RequestDomain) : fallback.domain,
+    goal: result.goal || fallback.goal,
+    publicAuthority: result.publicAuthority || fallback.publicAuthority,
     jurisdiction: jurisdictions.includes(result.jurisdiction as RtiState["jurisdiction"]) ? (result.jurisdiction as RtiState["jurisdiction"]) : fallback.jurisdiction,
+    suitabilityReason: result.suitabilityReason || fallback.suitabilityReason,
     restructuredRequests: Array.isArray(result.restructuredRequests) && result.restructuredRequests.length > 0 ? result.restructuredRequests : fallback.restructuredRequests,
     authorityConfidence: typeof result.authorityConfidence === "number" ? result.authorityConfidence : fallback.authorityConfidence,
     healthScore: typeof result.healthScore === "number" ? result.healthScore : fallback.healthScore,
@@ -40,7 +90,7 @@ function normalizeResult(query: string, result: Partial<RtiState>): RtiState {
 }
 
 export async function POST(request: Request) {
-  const body = await request.json().catch(() => null) as { query?: unknown } | null;
+  const body = (await request.json().catch(() => null)) as { query?: unknown } | null;
   const query = typeof body?.query === "string" ? body.query : "";
 
   const apiKey = process.env.GROQ_API_KEY || process.env.OPENAI_API_KEY;
@@ -60,14 +110,14 @@ Return ONLY a valid JSON object matching this schema:
 {
   "domain": "infrastructure" | "pension" | "scholarship" | "civic" | "general",
   "goal": "A concise 1-sentence legal objective describing what official public records are sought",
-  "publicAuthority": "Accurate department name (e.g. Forest Department / Municipal Corporation / EPFO / PWD)",
+  "publicAuthority": "Accurate department name (e.g. Department of Forests & Wildlife / Municipal Corporation / EPFO / PWD)",
   "jurisdiction": "Central" | "State" | "Municipal",
-  "suitabilityReason": "A clear legal explanation of why RTI applies and which exact records to request",
+  "suitabilityReason": "A clear legal explanation under RTI Act Section 2(f) describing which exact records to request",
   "restructuredRequests": [
-    "Certified copy of record item 1",
-    "Certified copy of record item 2",
-    "Certified copy of record item 3",
-    "Certified copy of record item 4"
+    "Certified copy of record 1",
+    "Certified copy of record 2",
+    "Certified copy of record 3",
+    "Certified copy of record 4"
   ],
   "authorityConfidence": 95,
   "healthScore": 90
@@ -87,7 +137,7 @@ Return ONLY a valid JSON object matching this schema:
 
     return Response.json(normalizeResult(query, parsed));
   } catch (error) {
-    console.error("AI Analysis Error:", error);
+    console.error("API route error:", error);
     return Response.json(offlineState(query));
   }
 }

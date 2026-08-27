@@ -50,7 +50,7 @@ export default function UnderstandPage() {
 
           <p className="mt-6 text-lg leading-8 text-[#173c38]/70">
             {state?.suitabilityReason ||
-              "RTI can provide existing sanction orders, counts, work orders, and inspection logs under Section 2(f)."}
+              "RTI can provide certified copies of sanction orders, permissions, and audit registers under Section 2(f)."}
           </p>
 
           <div className="mt-10 grid gap-4 sm:grid-cols-2">
