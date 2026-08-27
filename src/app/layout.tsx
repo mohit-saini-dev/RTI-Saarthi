@@ -5,7 +5,7 @@ import "./globals.css";
 import GovernmentBanner from "@/src/components/GovernmentBanner";
 import FaqAssistant from "@/src/components/FaqAssistant";
 import { LanguageProvider } from "@/src/context/LanguageContext";
-import DisclaimerBanner from "@/app/DisclaimerBanner";
+import DisclaimerBanner from "@/src/components/DisclaimerBanner";
 const geistSans = Geist({ variable: "--font-geist-sans", subsets: ["latin"] });
 const geistMono = Geist_Mono({ variable: "--font-geist-mono", subsets: ["latin"] });
 
