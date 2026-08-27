@@ -27,6 +27,7 @@ function offlineState(query: string): RtiState {
     jurisdictionWarning: preset.jurisdiction !== "Central",
     betterGrievanceRoute: preset.route,
     grievanceUrl: preset.url,
+    healthScore: preset.jurisdiction === "Central" ? defaultUniversalState.healthScore : 65,
     characterCount: query.length,
     usedFallback: true,
   };
@@ -58,6 +59,8 @@ function normalizeResult(query: string, result: Partial<RtiState>): RtiState {
   );
   const authorityReason = stringValue(result.authorityReason, suitabilityReason);
 
+  const healthScore = scoreValue(result.healthScore, fallback.healthScore);
+
   return {
     ...fallback,
     question: query.trim(),
@@ -74,7 +77,7 @@ function normalizeResult(query: string, result: Partial<RtiState>): RtiState {
     authorityConfidence: scoreValue(result.authorityConfidence, fallback.authorityConfidence),
     betterGrievanceRoute: stringValue(result.betterGrievanceRoute, fallback.betterGrievanceRoute),
     grievanceUrl: stringValue(result.grievanceUrl, fallback.grievanceUrl),
-    healthScore: scoreValue(result.healthScore, fallback.healthScore),
+    healthScore: jurisdiction === "Central" ? healthScore : Math.min(healthScore, 65),
     privacyGuard: stringValue(result.privacyGuard, fallback.privacyGuard),
     characterCount: query.length,
     usedFallback: false,
