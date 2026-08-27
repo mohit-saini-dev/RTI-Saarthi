@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { ArrowLeft, Check, ClipboardList, Copy, Download, HelpCircle, ShieldAlert, ShieldCheck } from "lucide-react";
+import { ArrowLeft, Check, ClipboardList, Copy, Download, ShieldAlert, ShieldCheck } from "lucide-react";
 import { type RtiState } from "@/src/lib/types";
 import { readRtiState } from "@/src/lib/client-state";
 
@@ -14,19 +14,20 @@ export default function AppealPage() {
     setState(readRtiState());
   }, []);
 
-  const publicAuthority = state?.publicAuthority || "Department of Forests & Wildlife";
-  const question = state?.question || "How many trees did the forest department cut in 2023?";
+  const publicAuthority = state?.publicAuthority || "Designated Public Authority";
+  const question = state?.question || "Requested RTI Query";
   const requests =
     state?.restructuredRequests && state.restructuredRequests.length > 0
       ? state.restructuredRequests
       : [
-          "Certified copy of official permission/sanction orders issued for felling trees during the year 2023.",
-          "Total official count and species breakdown of trees cut by or under approval of the Forest Department in 2023.",
-          "Certified copy of the compensatory afforestation plan and sapling plantation audit register for 2023.",
-          "Inspection reports and contractor execution logs relating to tree clearance projects in 2023.",
+          "Certified copy of official permission/sanction orders.",
+          "Total official count and breakdown records.",
+          "Certified copy of execution and audit registers.",
+          "Inspection reports and contractor execution logs.",
         ];
 
   const appealDraft = `FORM OF FIRST APPEAL UNDER SECTION 19(1) OF THE RTI ACT, 2005
+[DEMO / PROTOTYPE DRAFT — REVIEW DETAILS BEFORE SUBMITTING]
 
 To,
 The First Appellate Authority (FAA),
@@ -35,6 +36,7 @@ ${publicAuthority}
 Subject: First Appeal under Section 19(1) of the RTI Act, 2005 against non-furnishing of information / unsatisfactory response.
 
 Ref: Original RTI Application concerning "${question}"
+Demo Registration Reference: RTI/${new Date().getFullYear()}/009142
 
 Respected Authority,
 
@@ -47,20 +49,18 @@ Respected Authority,
    Designation: Public Information Officer
    Public Authority: ${publicAuthority}
 
-3. Date of filing original RTI Application: [DD/MM/YYYY] (Registration No: RTI/${new Date().getFullYear()}/009142)
+3. Timeline & Brief Facts:
+   The appellant submitted an RTI request seeking public records. As the applicable response period (usually 30 days under Section 7(1)) has elapsed without complete records / response provided was unsatisfactory, this appeal is preferred.
 
-4. Brief Facts leading to this Appeal:
-   The appellant filed an RTI application seeking official records. More than 30 days have elapsed since the receipt of the application, and no response has been received / the response provided was incomplete and misleading.
-
-5. Information Requested in Original Application:
+4. Public Records Requested:
 ${requests.map((req, i) => `   ${i + 1}. ${req}`).join("\n")}
 
-6. Grounds for Appeal:
-   a) Non-adherence to the mandatory 30-day timeline prescribed under Section 7(1) of the RTI Act, 2005.
-   b) Information sought relates to public records maintained under Section 2(f) and does not attract any exemption under Section 8(1).
+5. Grounds for Appeal:
+   a) Non-receipt of requested information within the standard statutory period.
+   b) Information sought pertains to accessible public records under Section 2(f) not covered by Section 8 exemptions.
 
-7. Relief Sought:
-   The appellant requests the First Appellate Authority to direct the PIO to provide certified copies of all requested records immediately free of charge under Section 7(6).
+6. Relief Sought:
+   The appellant requests the First Appellate Authority to direct the PIO to provide certified copies of all requested records without further delay.
 
 Place: _________________
 Date:  _________________
@@ -92,7 +92,7 @@ Yours faithfully,
   return (
     <main className="min-h-screen bg-[#f5f1e8] text-[#173c38]">
       <div className="mx-auto flex min-h-screen w-full max-w-7xl flex-col px-6 py-6 sm:px-10 lg:px-14">
-        {/* Portal Header */}
+        {/* Header */}
         <header className="flex items-center justify-between border-b border-[#173c38]/15 pb-5">
           <Link href="/" className="flex items-center gap-3">
             <div className="flex size-10 items-center justify-center rounded-xl bg-[#173c38] text-[#f5f1e8]">
@@ -109,7 +109,7 @@ Yours faithfully,
           </div>
         </header>
 
-        {/* Main Content */}
+        {/* Content */}
         <section className="mx-auto flex w-full max-w-4xl flex-1 flex-col justify-center py-12 lg:py-16">
           <div className="mb-4 flex items-center gap-2 text-sm font-semibold text-[#c45b35]">
             <ShieldAlert size={17} />
@@ -120,36 +120,38 @@ Yours faithfully,
             Ready for the next step.
           </h1>
           <p className="mt-5 max-w-3xl text-lg leading-8 text-[#173c38]/70">
-            If the Public Information Officer fails to respond within 30 days or provides incomplete records, you are entitled under <strong>Section 19(1)</strong> to escalate without paying an additional court fee.
+            If the Public Information Officer does not respond within the applicable statutory timeline or furnishes incomplete records, a First Appeal may be filed under Section 19(1).
           </p>
 
-          {/* Timeline Guidance Strip */}
+          {/* Calibrated Guidance Timeline */}
           <div className="mt-8 grid gap-4 sm:grid-cols-3">
             <div className="rounded-2xl border border-[#173c38]/10 bg-white p-5 shadow-sm">
-              <span className="text-xs font-bold uppercase tracking-wider text-[#c45b35]">Day 0 to 30</span>
-              <h4 className="mt-1 text-base font-bold">Statutory Window</h4>
-              <p className="mt-1 text-xs text-[#173c38]/70">Section 7(1) mandates the PIO to provide records or cite rejection within 30 days.</p>
+              <span className="text-xs font-bold uppercase tracking-wider text-[#c45b35]">Response Period</span>
+              <h4 className="mt-1 text-base font-bold">Standard 30 Days</h4>
+              <p className="mt-1 text-xs text-[#173c38]/70">Usually 30 days from application receipt under Section 7(1), subject to statutory exceptions.</p>
             </div>
             <div className="rounded-2xl border border-[#173c38]/10 bg-white p-5 shadow-sm">
-              <span className="text-xs font-bold uppercase tracking-wider text-[#27745e]">Day 30 to 60</span>
-              <h4 className="mt-1 text-base font-bold">First Appeal Window</h4>
-              <p className="mt-1 text-xs text-[#173c38]/70">File this First Appeal draft directly to the First Appellate Authority of {publicAuthority}.</p>
+              <span className="text-xs font-bold uppercase tracking-wider text-[#27745e]">First Appeal</span>
+              <h4 className="mt-1 text-base font-bold">First Appellate Authority</h4>
+              <p className="mt-1 text-xs text-[#173c38]/70">Submit to the FAA of {publicAuthority} if no response or an unsatisfactory reply is received.</p>
             </div>
             <div className="rounded-2xl border border-[#173c38]/10 bg-white p-5 shadow-sm">
-              <span className="text-xs font-bold uppercase tracking-wider text-[#173c38]">Day 90+</span>
-              <h4 className="mt-1 text-base font-bold">Second Appeal / CIC</h4>
-              <p className="mt-1 text-xs text-[#173c38]/70">Escalate to Central/State Information Commission with penalty invocation under Section 20.</p>
+              <span className="text-xs font-bold uppercase tracking-wider text-[#173c38]">Second Appeal</span>
+              <h4 className="mt-1 text-base font-bold">Information Commission</h4>
+              <p className="mt-1 text-xs text-[#173c38]/70">Available before the Central/State Information Commission with statutory review powers.</p>
             </div>
           </div>
 
-          {/* Editable / Printable Appeal Draft Box */}
-          <div className="mt-8 rounded-2xl border border-[#173c38]/10 bg-[#fffdf8] p-6 shadow-sm">
+          <p className="mt-3 text-xs italic text-[#173c38]/60">
+            * Informational guidance generated for demonstration purposes — not legal advice.
+          </p>
+
+          {/* AI-Assisted Draft Box */}
+          <div className="mt-6 rounded-2xl border border-[#173c38]/10 bg-[#fffdf8] p-6 shadow-sm">
             <div className="flex flex-wrap items-center justify-between gap-3 border-b border-[#173c38]/10 pb-4">
-              <div className="flex items-center gap-2">
-                <span className="flex size-7 items-center justify-center rounded-full bg-[#e5eee4] text-xs font-bold text-[#27745e]">
-                  ✓
-                </span>
-                <span className="text-sm font-bold text-[#173c38]">First Appeal Auto-Generated Draft</span>
+              <div>
+                <span className="text-sm font-bold text-[#173c38]">✓ AI-Assisted First Appeal Draft</span>
+                <p className="text-xs text-[#173c38]/60">Review all details before formal submission</p>
               </div>
 
               <div className="flex items-center gap-2">
@@ -179,7 +181,7 @@ Yours faithfully,
             />
           </div>
 
-          {/* Footer Navigation */}
+          {/* Navigation */}
           <div className="mt-10 flex flex-col items-center justify-between gap-4 sm:flex-row">
             <Link
               href="/review"
