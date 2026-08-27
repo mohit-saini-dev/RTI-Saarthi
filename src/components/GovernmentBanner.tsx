@@ -2,7 +2,7 @@
 
 import { Info, X } from "lucide-react";
 import Link from "next/link";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useLanguage, type LanguageCode } from "@/src/context/LanguageContext";
 
 const languages: { code: LanguageCode; label: string }[] = [
@@ -13,6 +13,25 @@ export default function GovernmentBanner() {
   const { language, setLanguage, t } = useLanguage();
   const [fontSize, setFontSize] = useState<"small" | "normal" | "large">("normal");
   const [showAbout, setShowAbout] = useState(false);
+  const [usedFallback, setUsedFallback] = useState(false);
+
+  useEffect(() => {
+    const updateOfflineMode = () => {
+      try {
+        setUsedFallback(JSON.parse(window.localStorage.getItem("rti_current_state") ?? "{}").usedFallback === true);
+      } catch {
+        setUsedFallback(false);
+      }
+    };
+
+    updateOfflineMode();
+    window.addEventListener("rti-state-updated", updateOfflineMode);
+    window.addEventListener("storage", updateOfflineMode);
+    return () => {
+      window.removeEventListener("rti-state-updated", updateOfflineMode);
+      window.removeEventListener("storage", updateOfflineMode);
+    };
+  }, []);
 
   function changeFontSize(size: "small" | "normal" | "large") {
     setFontSize(size);
@@ -25,6 +44,7 @@ export default function GovernmentBanner() {
         <div className="mx-auto flex w-full max-w-7xl flex-wrap items-center justify-between gap-x-5 gap-y-2 px-6 py-2 text-xs sm:px-10 lg:px-14">
           <div className="flex items-center gap-2 font-semibold tracking-[0.08em] uppercase"><span className="size-1.5 rounded-full bg-[#c8dfc3]" /> {t("portal_title")}</div>
           <div className="flex items-center gap-4">
+            {usedFallback && <span className="rounded-full border border-[#f3dfc9]/70 bg-[#c45b35] px-2 py-1 text-[10px] font-bold tracking-[0.08em] text-white uppercase">Offline mode</span>}
             <label className="flex items-center gap-2"><span className="sr-only">Choose language</span><select value={language} onChange={(event) => setLanguage(event.target.value as LanguageCode)} className="cursor-pointer bg-transparent font-semibold outline-none">{languages.map((item) => <option key={item.code} value={item.code} className="text-[#173c38]">{item.label}</option>)}</select></label>
             <div className="flex items-center gap-1 border-l border-white/20 pl-4" aria-label="Font size"><button type="button" onClick={() => changeFontSize("small")} aria-label="Decrease font size" className={`px-1 font-semibold ${fontSize === "small" ? "text-[#c8dfc3]" : "text-white/70"}`}>A-</button><button type="button" onClick={() => changeFontSize("normal")} aria-label="Normal font size" className={`px-1 font-semibold ${fontSize === "normal" ? "text-[#c8dfc3]" : "text-white/70"}`}>A</button><button type="button" onClick={() => changeFontSize("large")} aria-label="Increase font size" className={`px-1 font-semibold ${fontSize === "large" ? "text-[#c8dfc3]" : "text-white/70"}`}>A+</button></div>
             <button type="button" onClick={() => setShowAbout(true)} className="hidden font-semibold text-[#c8dfc3] underline-offset-4 hover:underline sm:block">{t("about")}</button>

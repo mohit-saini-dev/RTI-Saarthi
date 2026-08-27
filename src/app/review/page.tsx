@@ -40,7 +40,7 @@ export default function ReviewPage() {
           <p className="mt-6 max-w-xl text-lg leading-8 text-[#173c38]/70">Your request is ready. Check the records below, then submit this safe demonstration filing.</p>
 
           <div className="mt-10 rounded-2xl border border-[#173c38]/10 bg-[#fffdf8] p-6 shadow-[0_20px_45px_rgba(23,60,56,0.08)] sm:p-8">
-            <div className="flex flex-col gap-4 border-b border-[#173c38]/10 pb-5 sm:flex-row sm:items-center sm:justify-between"><div><p className="text-xs font-bold tracking-[0.14em] text-[#c45b35] uppercase">Requested records</p><h2 className="mt-1 text-2xl font-semibold">Five items for review</h2></div><span className="w-fit rounded-full bg-[#e5eee4] px-3 py-1.5 text-xs font-bold text-[#27745e]">Application fee: ₹10</span></div>
+            <div className="flex flex-col gap-4 border-b border-[#173c38]/10 pb-5 sm:flex-row sm:items-center sm:justify-between"><div><p className="text-xs font-bold tracking-[0.14em] text-[#c45b35] uppercase">Requested records</p><h2 className="mt-1 text-2xl font-semibold">{state.restructuredRequests.length} items for review</h2></div><span className="w-fit rounded-full bg-[#e5eee4] px-3 py-1.5 text-xs font-bold text-[#27745e]">Application fee: ₹10</span></div>
             <ol className="mt-5 space-y-3">{state.restructuredRequests.map((request, index) => <li key={request} className="flex gap-3 text-sm leading-6"><span className="flex size-6 shrink-0 items-center justify-center rounded-full bg-[#e5eee4] text-xs font-bold text-[#27745e]">{index + 1}</span><span>{request}</span></li>)}</ol>
           </div>
 
