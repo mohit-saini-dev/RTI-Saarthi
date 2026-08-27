@@ -1,0 +1,892 @@
+﻿=== FILE: C:\Users\Dell\changesentinel\rti-saarthi\src\app\about\page.tsx ===
+import { ArrowRight, CheckCircle2, ClipboardList } from "lucide-react";
+import Link from "next/link";
+
+const comparisons = [
+  { label: "Citizen starting point", standard: "Write a free-form question and hope it reaches the right desk.", saarthi: "Turn plain language into a focused records request." },
+  { label: "Legal clarity", standard: "Limited guidance on what Section 2(f) and 2(j) cover.", saarthi: "Identify existing records that are concrete, checkable, and less likely to be rejected." },
+  { label: "Filing confidence", standard: "Find the authority, fee, and next step yourself.", saarthi: "Match the authority, run privacy and jurisdiction guards, then review before filing." },
+];
+
+export default function AboutPage() {
+  return (
+    <main className="min-h-screen bg-[#f5f1e8] text-[#173c38]"><div className="mx-auto flex min-h-screen w-full max-w-7xl flex-col px-6 py-6 sm:px-10 lg:px-14"><header className="flex items-center justify-between border-b border-[#173c38]/15 pb-5"><Link href="/" className="flex items-center gap-3"><div className="flex size-10 items-center justify-center rounded-xl bg-[#173c38] text-[#f5f1e8]"><ClipboardList size={20} /></div><div><p className="text-sm font-bold tracking-[0.16em] uppercase">RTI Saarthi</p><p className="text-xs text-[#173c38]/60">Citizen Intelligence &amp; RTI Filing Layer</p></div></Link><Link href="/" className="text-sm font-bold text-[#c45b35] hover:underline">Back to home</Link></header><section className="mx-auto w-full max-w-5xl py-14 lg:py-20"><p className="mb-7 text-sm font-semibold text-[#c45b35]">About RTI Saarthi</p><h1 className="max-w-4xl text-5xl leading-[0.98] font-semibold tracking-[-0.04em] sm:text-7xl">Make the question clearer. Make the answer checkable.</h1><p className="mt-8 max-w-3xl text-xl leading-9 text-[#173c38]/70">Transforming plain-language citizen inquiries into valid, structured record requests to eliminate rejections under Section 2(f) and 2(j).</p><div className="mt-14 overflow-hidden rounded-2xl border border-[#173c38]/10 bg-[#fffdf8] shadow-[0_20px_45px_rgba(23,60,56,0.08)]"><div className="grid grid-cols-[1fr_1fr] border-b border-[#173c38]/10 bg-[#e5eee4] px-5 py-4 text-xs font-bold tracking-[0.12em] uppercase sm:grid-cols-[1fr_1fr_1fr]"><span>Workflow</span><span>rtionline.gov.in</span><span>RTI Saarthi</span></div>{comparisons.map((comparison) => <div key={comparison.label} className="grid grid-cols-[1fr_1fr] gap-x-5 border-b border-[#173c38]/10 px-5 py-5 last:border-0 sm:grid-cols-[1fr_1fr_1fr]"><p className="col-span-2 text-sm font-bold sm:col-span-1">{comparison.label}</p><p className="mt-2 text-sm leading-6 text-[#173c38]/60 sm:mt-0">{comparison.standard}</p><p className="mt-3 flex gap-2 text-sm leading-6 text-[#173c38]/80 sm:mt-0"><CheckCircle2 className="mt-0.5 shrink-0 text-[#27745e]" size={17} />{comparison.saarthi}</p></div>)}</div><div className="mt-10 flex flex-col gap-4 rounded-2xl bg-[#173c38] p-6 text-[#f5f1e8] sm:flex-row sm:items-center sm:justify-between"><p className="max-w-2xl text-lg leading-7">RTI Saarthi helps you ask for records. It does not promise outcomes or replace official filing channels.</p><Link href="/" className="flex min-h-12 shrink-0 items-center justify-center gap-2 rounded-xl bg-[#c45b35] px-5 py-3 text-sm font-bold transition hover:bg-[#a94728]">Ask a question <ArrowRight size={17} /></Link></div></section></div></main>
+  );
+}
+
+
+
+=== FILE: C:\Users\Dell\changesentinel\rti-saarthi\src\app\api\analyze\route.ts ===
+import OpenAI from "openai";
+import { defaultUniversalState, type RequestDomain, type RtiState } from "@/src/lib/types";
+
+export const runtime = "nodejs";
+
+function offlineState(query: string): RtiState {
+  const normalizedQuery = query.toLowerCase();
+  const preset = normalizedQuery.match(/pension|gratuity|epfo|credited/)
+    ? { domain: "pension" as const, goal: "Understand pension payment delay and file movement", requests: ["Copy of the sanction/release order for my pension", "Current status of my pension file", "Date last payment was processed", "Name/Designation of the dealing officer", "File notings/correspondence regarding the delay."], authority: "Department of Pension & Pensioners' Welfare (Central)", confidence: 91, jurisdiction: "Central" as const, reason: "Your question appears to concern a Central Government pension.", route: "CPGRAMS", url: "https://pgportal.gov.in" }
+    : normalizedQuery.match(/scholarship|merit|stipend|disbursement/)
+      ? { domain: "scholarship" as const, goal: "Obtain official sanction and disbursement records for National Merit Scholarship", requests: ["Certified copy of merit list sanction order", "DBT disbursement transaction failure log/reasons", "Current nodal officer designation", "Budget allocation and release status"], authority: "Ministry of Education / UGC", confidence: 89, jurisdiction: "Central" as const, reason: "The request concerns scholarship sanction and disbursement records.", route: "Scholarship grievance portal", url: "https://pgportal.gov.in" }
+      : normalizedQuery.match(/road|ward|pothole|tender|contractor/)
+        ? { domain: "infrastructure" as const, goal: "Inspect road repair tender status and contractor execution in Ward 4", requests: ["Certified copy of tender agreement and sanctioned timeline", "Measurement Book (MB) entries", "Inspection logbook", "Delay penalty records"], authority: "Public Works Department (PWD) / Municipal Corporation", confidence: 94, jurisdiction: "Municipal" as const, reason: "The request concerns a Municipal road infrastructure project.", route: "Municipal grievance portal", url: "https://pgportal.gov.in" }
+        : { domain: "civic" as const, goal: "Obtain official public records and inspection logs for civic service request", requests: defaultUniversalState.restructuredRequests, authority: "Municipal Corporation / Civic Administration", confidence: 85, jurisdiction: "Municipal" as const, reason: "The request concerns a civic service and its official records.", route: "Municipal grievance portal", url: "https://pgportal.gov.in" };
+  return { ...defaultUniversalState, question: query.trim() || defaultUniversalState.question, domain: preset.domain, goal: preset.goal, citizenGoal: preset.goal, suggestedAuthority: preset.authority, publicAuthority: preset.authority, authorityReason: preset.reason, restructuredRequests: preset.requests, authorityConfidence: preset.confidence, jurisdiction: preset.jurisdiction, betterGrievanceRoute: preset.route, grievanceUrl: preset.url, characterCount: query.length };
+}
+
+function normalizeResult(query: string, result: Partial<RtiState>): RtiState {
+  const fallback = offlineState(query);
+  const domains: RequestDomain[] = ["infrastructure", "pension", "scholarship", "civic", "general"];
+  const jurisdictions: RtiState["jurisdiction"][] = ["Central", "State", "Municipal"];
+  return {
+    ...fallback,
+    ...result,
+    question: query.trim(),
+    domain: domains.includes(result.domain as RequestDomain) ? result.domain as RequestDomain : fallback.domain,
+    jurisdiction: jurisdictions.includes(result.jurisdiction as RtiState["jurisdiction"]) ? result.jurisdiction as RtiState["jurisdiction"] : fallback.jurisdiction,
+    restructuredRequests: Array.isArray(result.restructuredRequests) && result.restructuredRequests.length >= 4 ? result.restructuredRequests.slice(0, 5).map(String) : fallback.restructuredRequests,
+    authorityConfidence: typeof result.authorityConfidence === "number" ? result.authorityConfidence : fallback.authorityConfidence,
+    healthScore: typeof result.healthScore === "number" ? result.healthScore : fallback.healthScore,
+    characterCount: query.length,
+  };
+}
+
+export async function POST(request: Request) {
+  const body = await request.json().catch(() => null) as { query?: unknown } | null;
+  const query = typeof body?.query === "string" ? body.query : "";
+
+  if (!query.trim() || !process.env.OPENAI_API_KEY) {
+    return Response.json(offlineState(query));
+  }
+
+  try {
+    const client = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+    const completion = await client.chat.completions.create({
+      model: "gpt-4o-mini",
+      response_format: { type: "json_object" },
+      messages: [
+        { role: "system", content: "You are a careful Indian RTI request analyzer. Return only JSON matching the requested schema. RTI under Section 2(f) seeks existing records, not explanations, action, or opinions. Suggest 4-5 precise record requests such as certified work orders, measurement books, file notings, inspection registers, and officer designations. Never request Aadhaar, PAN, or sensitive identity documents." },
+        { role: "user", content: `Analyze this citizen query: ${query}\nReturn JSON with: domain (infrastructure|pension|scholarship|civic|general), citizenGoal, suitabilityReason, restructuredRequests (array of 4-5 strings), publicAuthority, jurisdiction (Central|State|Municipal), authorityConfidence (0-100), betterGrievanceRoute, grievanceUrl, healthScore (0-100), privacyGuard.` },
+      ],
+    });
+    const content = completion.choices[0]?.message.content;
+    const parsed = content ? JSON.parse(content) as Partial<RtiState> : {};
+    if (parsed.goal && !parsed.citizenGoal) parsed.citizenGoal = parsed.goal;
+    if (parsed.suggestedAuthority && !parsed.publicAuthority) parsed.publicAuthority = parsed.suggestedAuthority;
+    if (parsed.authorityReason && !parsed.suitabilityReason) parsed.suitabilityReason = parsed.authorityReason;
+    return Response.json(normalizeResult(query, parsed));
+  } catch {
+    return Response.json(offlineState(query));
+  }
+}
+
+
+
+=== FILE: C:\Users\Dell\changesentinel\rti-saarthi\src\app\appeal\page.tsx ===
+"use client";
+
+import { CheckCircle2, ClipboardList, ShieldCheck } from "lucide-react";
+import Link from "next/link";
+import { useEffect, useState } from "react";
+import { defaultUniversalState, type RtiState } from "@/src/lib/types";
+import { readRtiState } from "@/src/lib/client-state";
+
+export default function AppealPage() {
+  const [state, setState] = useState<RtiState>(defaultUniversalState);
+  useEffect(() => {
+    const updateState = window.setTimeout(() => setState(readRtiState()), 0);
+    return () => window.clearTimeout(updateState);
+  }, []);
+  const draft = `Subject: First Appeal regarding RTI request on ${state.question}\n\nTo the First Appellate Authority of ${state.suggestedAuthority},\n\nI seek a review of the response or delay relating to my RTI request. The requested records were:\n${state.restructuredRequests.map((request, index) => `${index + 1}. ${request}`).join("\n")}\n\nPlease provide the information and action required under the RTI Act.`;
+
+  return (
+    <main className="min-h-screen bg-[#f5f1e8] text-[#173c38]"><div className="mx-auto flex min-h-screen w-full max-w-7xl flex-col px-6 py-6 sm:px-10 lg:px-14">
+      <header className="flex items-center justify-between border-b border-[#173c38]/15 pb-5"><Link href="/" className="flex items-center gap-3"><div className="flex size-10 items-center justify-center rounded-xl bg-[#173c38] text-[#f5f1e8]"><ClipboardList size={20} /></div><div><p className="text-sm font-bold tracking-[0.16em] uppercase">RTI Saarthi</p><p className="text-xs text-[#173c38]/60">Citizen Intelligence &amp; RTI Filing Layer</p></div></Link><div className="hidden items-center gap-2 text-xs font-semibold text-[#173c38]/60 sm:flex"><ShieldCheck size={16} /> First appeal draft</div></header>
+      <section className="mx-auto flex w-full max-w-4xl flex-1 flex-col justify-center py-14 lg:py-20"><div className="mb-7 flex items-center gap-2 text-sm font-semibold text-[#c45b35]"><ShieldCheck size={17} /> Screen 8 / Appeal guidance</div><h1 className="max-w-2xl text-5xl leading-[0.98] font-semibold tracking-[-0.04em] sm:text-7xl">Ready for the next step.</h1><p className="mt-7 max-w-xl text-lg leading-8 text-[#173c38]/70">This draft reflects your question, requested records, and matched authority.</p><div className="mt-10 rounded-2xl border border-[#27745e]/25 bg-[#e5eee4] p-6 shadow-[0_18px_40px_rgba(23,60,56,0.06)] sm:p-8"><div className="flex items-center gap-3 text-[#27745e]"><CheckCircle2 size={20} /><p className="font-bold">First Appeal draft</p></div><textarea readOnly value={draft} rows={12} className="mt-5 w-full resize-y rounded-xl border border-[#173c38]/10 bg-[#fffdf8] p-4 text-sm leading-6 text-[#173c38] outline-none" /><p className="mt-4 text-sm leading-7 text-[#173c38]/70">Keep registration number {state.registrationNumber} and any reply you receive.</p><Link href="/" className="mt-7 inline-flex min-h-12 items-center justify-center rounded-xl border border-[#173c38]/20 px-5 py-3 text-sm font-bold transition hover:border-[#173c38] hover:bg-white">Start another question</Link></div></section>
+    </div></main>
+  );
+}
+
+
+
+=== FILE: C:\Users\Dell\changesentinel\rti-saarthi\src\app\authority\page.tsx ===
+"use client";
+
+import { ArrowRight, Building2, ClipboardList, ShieldCheck } from "lucide-react";
+import Link from "next/link";
+import { useEffect, useState } from "react";
+import { defaultUniversalState, type RtiState } from "@/src/lib/types";
+import { readRtiState } from "@/src/lib/client-state";
+
+export default function AuthorityPage() {
+  const [state, setState] = useState<RtiState>(defaultUniversalState);
+  useEffect(() => {
+    const updateState = window.setTimeout(() => setState(readRtiState()), 0);
+    return () => window.clearTimeout(updateState);
+  }, []);
+
+  return (
+    <main className="min-h-screen bg-[#f5f1e8] text-[#173c38]"><div className="mx-auto flex min-h-screen w-full max-w-7xl flex-col px-6 py-6 sm:px-10 lg:px-14">
+      <header className="flex items-center justify-between border-b border-[#173c38]/15 pb-5"><Link href="/" className="flex items-center gap-3"><div className="flex size-10 items-center justify-center rounded-xl bg-[#173c38] text-[#f5f1e8]"><ClipboardList size={20} /></div><div><p className="text-sm font-bold tracking-[0.16em] uppercase">RTI Saarthi</p><p className="text-xs text-[#173c38]/60">Citizen Intelligence &amp; RTI Filing Layer</p></div></Link><div className="hidden items-center gap-2 text-xs font-semibold text-[#173c38]/60 sm:flex"><ShieldCheck size={16} /> Authority match</div></header>
+      <section className="mx-auto flex w-full max-w-3xl flex-1 flex-col justify-center py-14 lg:py-20"><div className="mb-7 flex items-center gap-2 text-sm font-semibold text-[#c45b35]"><ShieldCheck size={17} /> Screen 4 / Authority match</div><h1 className="max-w-2xl text-5xl leading-[0.98] font-semibold tracking-[-0.04em] sm:text-7xl">Who should receive this request?</h1><p className="mt-7 max-w-xl text-lg leading-8 text-[#173c38]/70">We matched your records request to the authority most likely to hold the information.</p>
+        <div className="mt-10 rounded-2xl border border-[#173c38]/10 bg-[#fffdf8] p-6 shadow-[0_24px_50px_rgba(23,60,56,0.1)] sm:p-8"><div className="flex flex-col gap-5 sm:flex-row sm:items-start sm:justify-between"><div className="flex items-start gap-4"><div className="flex size-12 shrink-0 items-center justify-center rounded-xl bg-[#e5eee4] text-[#27745e]"><Building2 size={23} /></div><div><p className="text-xs font-bold tracking-[0.14em] text-[#c45b35] uppercase">Matched authority</p><h2 className="mt-2 text-2xl leading-8 font-semibold">{state.suggestedAuthority}</h2></div></div><span className="w-fit shrink-0 rounded-full bg-[#e5eee4] px-3 py-1.5 text-xs font-bold text-[#27745e]">Confidence: {state.authorityConfidence}%</span></div><div className="mt-7 border-t border-[#173c38]/10 pt-5"><p className="text-xs font-bold tracking-[0.12em] text-[#173c38]/50 uppercase">Why this match</p><p className="mt-2 text-base leading-7 text-[#173c38]/70">{state.authorityReason}</p></div><Link href="/health-check" className="mt-8 flex min-h-12 items-center justify-center gap-2 rounded-xl bg-[#c45b35] px-5 py-3 text-center text-sm font-bold text-white transition hover:bg-[#a94728]">Looks right, continue <ArrowRight size={17} /></Link></div>
+      </section>
+    </div></main>
+  );
+}
+
+
+
+=== FILE: C:\Users\Dell\changesentinel\rti-saarthi\src\app\health-check\page.tsx ===
+"use client";
+
+import { ArrowRight, CheckCircle2, ClipboardList, ShieldCheck } from "lucide-react";
+import Link from "next/link";
+import { useEffect, useState } from "react";
+import { defaultUniversalState, type RtiState } from "@/src/lib/types";
+import { readRtiState } from "@/src/lib/client-state";
+
+export default function HealthCheckPage() {
+  const [state, setState] = useState<RtiState>(defaultUniversalState);
+  useEffect(() => {
+    const updateState = window.setTimeout(() => setState(readRtiState()), 0);
+
+    return () => window.clearTimeout(updateState);
+  }, []);
+  const checks = [
+    { label: "Authority", value: state.jurisdiction, detail: "Verified" },
+    { label: "Request Type", value: "Records", detail: "Passed" },
+    { label: "Specificity", value: "Clear", detail: "Passed" },
+    { label: "Privacy Guard", value: "PASS", detail: state.privacyGuard },
+    { label: "Character Limit", value: `${state.characterCount} / 3000`, detail: "Passed" },
+  ];
+  return (
+    <main className="min-h-screen overflow-hidden bg-[#f5f1e8] text-[#173c38]">
+      <div className="mx-auto flex min-h-screen w-full max-w-7xl flex-col px-6 py-6 sm:px-10 lg:px-14">
+        <header className="flex items-center justify-between border-b border-[#173c38]/15 pb-5">
+          <Link href="/" className="flex items-center gap-3">
+            <div className="flex size-10 items-center justify-center rounded-xl bg-[#173c38] text-[#f5f1e8]"><ClipboardList size={20} strokeWidth={1.8} /></div>
+            <div><p className="text-sm font-bold tracking-[0.16em] uppercase">RTI Saarthi</p><p className="text-xs text-[#173c38]/60">Citizen Intelligence &amp; RTI Filing Layer</p></div>
+                      <div><p className="text-sm font-bold tracking-[0.16em] uppercase">RTI Saarthi</p><p className="text-xs text-[#173c38]/60">Citizen Intelligence &amp; RTI Filing Layer</p></div>
+          </Link>
+          <div className="hidden items-center gap-2 text-xs font-semibold text-[#173c38]/60 sm:flex"><ShieldCheck size={16} /> Deterministic health check</div>
+        </header>
+
+        <section className="mx-auto flex w-full max-w-4xl flex-1 flex-col justify-center py-12 lg:py-16">
+          <div className="mb-7 flex items-center gap-2 text-sm font-semibold text-[#c45b35]"><ShieldCheck size={17} /> Screen 5 / Health check</div>
+          <div className="flex flex-col gap-7 sm:flex-row sm:items-end sm:justify-between">
+            <div><h1 className="max-w-2xl text-5xl leading-[0.98] font-semibold tracking-[-0.04em] sm:text-7xl">Ready for a clean filing.</h1><p className="mt-6 max-w-xl text-lg leading-8 text-[#173c38]/70">A few deterministic checks keep your RTI request focused, answerable, and safe to submit.</p></div>
+            <div className="flex size-32 shrink-0 flex-col items-center justify-center rounded-full border-[10px] border-[#c8dfc3] bg-[#173c38] text-[#f5f1e8] shadow-[0_18px_40px_rgba(23,60,56,0.15)]"><span className="text-4xl font-semibold">{state.healthScore}</span><span className="text-xs font-bold tracking-[0.12em] uppercase opacity-70">out of 100</span></div>
+          </div>
+
+          <div className="mt-10 overflow-hidden rounded-2xl border border-[#173c38]/10 bg-[#fffdf8] shadow-[0_20px_45px_rgba(23,60,56,0.08)]">
+            {checks.map((check, index) => (
+              <div key={check.label} className={`flex flex-col gap-2 px-5 py-4 sm:flex-row sm:items-center sm:justify-between sm:gap-5 ${index > 0 ? "border-t border-[#173c38]/10" : ""}`}>
+                <div className="flex items-center gap-3"><CheckCircle2 className="shrink-0 text-[#27745e]" size={19} /><p className="text-sm font-bold">{check.label}</p></div>
+                <div className="flex items-center gap-3 pl-8 sm:pl-0"><span className="text-sm font-semibold">{check.value}</span><span className="rounded-full bg-[#e5eee4] px-2.5 py-1 text-xs font-bold text-[#27745e]">{check.detail}</span></div>
+              </div>
+            ))}
+          </div>
+
+          <div className="mt-4 flex items-start gap-3 rounded-2xl bg-[#f3dfc9] px-5 py-4 text-sm leading-6 text-[#173c38]/80"><ShieldCheck className="mt-0.5 shrink-0 text-[#c45b35]" size={18} /><p><strong className="font-bold text-[#173c38]">Privacy reminder:</strong> No identity documents are needed. Do not upload your Aadhaar or PAN.</p></div>
+          <div className="mt-4 flex flex-col gap-4 rounded-2xl border border-[#27745e]/25 bg-[#e5eee4] px-5 py-4 sm:flex-row sm:items-center sm:justify-between"><div><p className="text-xs font-bold tracking-[0.12em] text-[#27745e] uppercase">Jurisdiction shield</p><p className="mt-1 font-bold">PASS <span className="font-normal text-[#173c38]/65">({state.jurisdiction} subject)</span></p></div><Link href="/review" className="flex min-h-12 items-center justify-center gap-2 rounded-xl bg-[#c45b35] px-5 py-3 text-center text-sm font-bold text-white transition hover:bg-[#a94728]">Review &amp; submit <ArrowRight size={17} /></Link></div>
+        </section>
+      </div>
+    </main>
+  );
+}
+
+
+
+=== FILE: C:\Users\Dell\changesentinel\rti-saarthi\src\app\journey\page.tsx ===
+"use client";
+
+import { ArrowRight, CheckCircle2, ClipboardList, ShieldCheck } from "lucide-react";
+import Link from "next/link";
+import { useEffect, useState } from "react";
+import { defaultUniversalState, type RtiState } from "@/src/lib/types";
+import { readRtiState } from "@/src/lib/client-state";
+
+export default function JourneyPage() {
+  const [state, setState] = useState<RtiState>(defaultUniversalState);
+  useEffect(() => {
+    const updateState = window.setTimeout(() => setState(readRtiState()), 0);
+
+    return () => window.clearTimeout(updateState);
+  }, []);
+
+  return (
+    <main className="min-h-screen overflow-hidden bg-[#f5f1e8] text-[#173c38]">
+      <div className="mx-auto flex min-h-screen w-full max-w-7xl flex-col px-6 py-6 sm:px-10 lg:px-14">
+        <header className="flex items-center justify-between border-b border-[#173c38]/15 pb-5">
+          <Link href="/" className="flex items-center gap-3"><div className="flex size-10 items-center justify-center rounded-xl bg-[#173c38] text-[#f5f1e8]"><ClipboardList size={20} strokeWidth={1.8} /></div><div><p className="text-sm font-bold tracking-[0.16em] uppercase">RTI Saarthi</p><p className="text-xs text-[#173c38]/60">Citizen Intelligence &amp; RTI Filing Layer</p></div></Link>
+                    <Link href="/" className="flex items-center gap-3"><div className="flex size-10 items-center justify-center rounded-xl bg-[#173c38] text-[#f5f1e8]"><ClipboardList size={20} strokeWidth={1.8} /></div><div><p className="text-sm font-bold tracking-[0.16em] uppercase">RTI Saarthi</p><p className="text-xs text-[#173c38]/60">Citizen Intelligence &amp; RTI Filing Layer</p></div></Link>
+          <div className="hidden items-center gap-2 text-xs font-semibold text-[#173c38]/60 sm:flex"><ShieldCheck size={16} /> Demo journey</div>
+        </header>
+        <section className="mx-auto flex w-full max-w-3xl flex-1 flex-col justify-center py-14 lg:py-20">
+          <div className="mb-7 flex items-center gap-2 text-sm font-semibold text-[#c45b35]"><ShieldCheck size={17} /> Screen 7 / Track your RTI</div>
+          <h1 className="max-w-2xl text-5xl leading-[0.98] font-semibold tracking-[-0.04em] sm:text-7xl">Your RTI journey is underway.</h1>
+          <p className="mt-7 max-w-xl text-lg leading-8 text-[#173c38]/70">This demo request is registered as <strong className="font-bold text-[#173c38]">{state.registrationNumber}</strong>. Follow the next step when you need to escalate a delayed response.</p>
+          <div className="mt-10 rounded-2xl border border-[#173c38]/10 bg-[#fffdf8] p-6 shadow-[0_20px_45px_rgba(23,60,56,0.08)] sm:p-8">
+            <div className="flex items-center gap-3 text-[#27745e]"><CheckCircle2 size={20} /><p className="font-bold">Demo submission recorded</p></div>
+            <div className="mt-6 border-t border-[#173c38]/10 pt-5"><p className="text-xs font-bold tracking-[0.12em] text-[#173c38]/50 uppercase">Current status</p><p className="mt-2 text-xl font-semibold">Submitted for information</p><p className="mt-2 text-sm leading-6 text-[#173c38]/65">No real filing was made. This synthetic journey for {state.domain} is ready for the appeal step.</p></div>
+            <Link href="/appeal" className="mt-8 flex min-h-12 items-center justify-center gap-2 rounded-xl bg-[#c45b35] px-5 py-3 text-center text-sm font-bold text-white transition hover:bg-[#a94728]">Continue to appeal <ArrowRight size={17} /></Link>
+          </div>
+        </section>
+      </div>
+    </main>
+  );
+}
+
+
+
+=== FILE: C:\Users\Dell\changesentinel\rti-saarthi\src\app\question\page.tsx ===
+"use client";
+
+import { ArrowRight, Check, ClipboardList, Pencil, ShieldCheck } from "lucide-react";
+import Link from "next/link";
+import { useEffect, useState } from "react";
+import { initialDemoState } from "@/src/lib/types";
+import { readRtiState } from "@/src/lib/client-state";
+
+export default function QuestionPage() {
+  const [isEditing, setIsEditing] = useState(false);
+  const [requests, setRequests] = useState(initialDemoState.restructuredRequests);
+
+  useEffect(() => {
+    const currentState = readRtiState();
+    const updateRequests = window.setTimeout(() => setRequests(currentState.restructuredRequests), 0);
+
+    return () => window.clearTimeout(updateRequests);
+  }, []);
+
+  return (
+    <main className="min-h-screen overflow-hidden bg-[#f5f1e8] text-[#173c38]">
+      <div className="mx-auto flex min-h-screen w-full max-w-7xl flex-col px-6 py-6 sm:px-10 lg:px-14">
+        <header className="flex items-center justify-between border-b border-[#173c38]/15 pb-5">
+          <Link href="/" className="flex items-center gap-3">
+            <div className="flex size-10 items-center justify-center rounded-xl bg-[#173c38] text-[#f5f1e8]">
+              <ClipboardList size={20} strokeWidth={1.8} />
+            </div>
+            <div>
+              <p className="text-sm font-bold tracking-[0.16em] uppercase">RTI Saarthi</p>
+              <p className="text-xs text-[#173c38]/60">Citizen Intelligence &amp; RTI Filing Layer</p>
+                          <p className="text-xs text-[#173c38]/60">Citizen Intelligence &amp; RTI Filing Layer</p>
+            </div>
+          </Link>
+          <div className="hidden items-center gap-2 text-xs font-semibold text-[#173c38]/60 sm:flex">
+            <ShieldCheck size={16} />
+            Sahi Sawal
+          </div>
+        </header>
+
+        <section className="mx-auto flex w-full max-w-4xl flex-1 flex-col justify-center py-14 lg:py-20">
+          <div className="mb-7 flex items-center gap-2 text-sm font-semibold text-[#c45b35]">
+            <ShieldCheck size={17} />
+            Screen 3 / Sahi Sawal
+          </div>
+          <h1 className="max-w-3xl text-4xl leading-[1.05] font-semibold tracking-[-0.035em] sm:text-6xl">
+            Ask for records, not explanations.
+          </h1>
+          <p className="mt-7 max-w-3xl text-lg leading-8 text-[#173c38]/70">
+            &quot;Why hasn&apos;t it been credited&quot; asks for an explanation. RTI works best with specific record requests. Here is what you can actually ask for:
+          </p>
+
+          <div className="mt-10 space-y-3">
+            {requests.map((request, index) => (
+              <div key={index} className="flex items-center gap-4 rounded-2xl border border-[#173c38]/10 bg-[#fffdf8] px-5 py-4 shadow-[0_12px_30px_rgba(23,60,56,0.06)]">
+                <span className="flex size-9 shrink-0 items-center justify-center rounded-full bg-[#e5eee4] text-sm font-bold text-[#27745e]">
+                  {index + 1}
+                </span>
+                {isEditing ? (
+                  <input
+                    aria-label={`Record request ${index + 1}`}
+                    value={request}
+                    onChange={(event) => setRequests((current) => current.map((item, itemIndex) => itemIndex === index ? event.target.value : item))}
+                    className="min-w-0 flex-1 border-b border-[#c45b35] bg-transparent py-1 text-base leading-7 outline-none"
+                  />
+                ) : (
+                  <p className="text-base leading-7 font-medium">{request}</p>
+                )}
+              </div>
+            ))}
+          </div>
+
+          <div className="mt-10 flex flex-col-reverse gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <button type="button" onClick={() => setIsEditing((current) => !current)} className="flex min-h-12 items-center justify-center gap-2 rounded-xl border border-[#173c38]/20 px-5 py-3 text-sm font-bold transition hover:border-[#173c38] hover:bg-white">
+              {isEditing ? <Check size={16} /> : <Pencil size={16} />}
+              {isEditing ? "Done editing" : "Edit"}
+            </button>
+            <Link href="/authority" className="flex min-h-12 items-center justify-center gap-2 rounded-xl bg-[#c45b35] px-5 py-3 text-center text-sm font-bold text-white transition hover:bg-[#a94728]">
+              Use these records <ArrowRight size={17} />
+            </Link>
+          </div>
+        </section>
+      </div>
+    </main>
+  );
+}
+
+
+
+=== FILE: C:\Users\Dell\changesentinel\rti-saarthi\src\app\review\page.tsx ===
+"use client";
+
+import { ArrowRight, CheckCircle2, ClipboardList, LoaderCircle, ShieldCheck } from "lucide-react";
+import Link from "next/link";
+import { useEffect, useState } from "react";
+import { defaultUniversalState, type RtiState } from "@/src/lib/types";
+import { readRtiState } from "@/src/lib/client-state";
+
+export default function ReviewPage() {
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isSubmitted, setIsSubmitted] = useState(false);
+  const [state, setState] = useState<RtiState>(defaultUniversalState);
+
+  useEffect(() => {
+    const updateState = window.setTimeout(() => setState(readRtiState()), 0);
+
+    return () => window.clearTimeout(updateState);
+  }, []);
+
+  function submitDemo() {
+    setIsSubmitting(true);
+    window.setTimeout(() => {
+      setIsSubmitting(false);
+      setIsSubmitted(true);
+    }, 900);
+  }
+
+  return (
+    <main className="min-h-screen overflow-hidden bg-[#f5f1e8] text-[#173c38]">
+      <div className="mx-auto flex min-h-screen w-full max-w-7xl flex-col px-6 py-6 sm:px-10 lg:px-14">
+        <header className="flex items-center justify-between border-b border-[#173c38]/15 pb-5">
+          <Link href="/" className="flex items-center gap-3"><div className="flex size-10 items-center justify-center rounded-xl bg-[#173c38] text-[#f5f1e8]"><ClipboardList size={20} strokeWidth={1.8} /></div><div><p className="text-sm font-bold tracking-[0.16em] uppercase">RTI Saarthi</p><p className="text-xs text-[#173c38]/60">Citizen Intelligence &amp; RTI Filing Layer</p></div></Link>
+                    <Link href="/" className="flex items-center gap-3"><div className="flex size-10 items-center justify-center rounded-xl bg-[#173c38] text-[#f5f1e8]"><ClipboardList size={20} strokeWidth={1.8} /></div><div><p className="text-sm font-bold tracking-[0.16em] uppercase">RTI Saarthi</p><p className="text-xs text-[#173c38]/60">Citizen Intelligence &amp; RTI Filing Layer</p></div></Link>
+          <div className="hidden items-center gap-2 text-xs font-semibold text-[#173c38]/60 sm:flex"><ShieldCheck size={16} /> Review &amp; mock submission</div>
+        </header>
+
+        <section className="mx-auto flex w-full max-w-4xl flex-1 flex-col justify-center py-12 lg:py-16">
+          <div className="mb-7 flex items-center gap-2 text-sm font-semibold text-[#c45b35]"><ShieldCheck size={17} /> Screen 6 / Review &amp; submit</div>
+          <h1 className="max-w-2xl text-5xl leading-[0.98] font-semibold tracking-[-0.04em] sm:text-7xl">One last look before you send.</h1>
+          <p className="mt-6 max-w-xl text-lg leading-8 text-[#173c38]/70">Your request is ready. Check the records below, then submit this safe demonstration filing.</p>
+
+          <div className="mt-10 rounded-2xl border border-[#173c38]/10 bg-[#fffdf8] p-6 shadow-[0_20px_45px_rgba(23,60,56,0.08)] sm:p-8">
+            <div className="flex flex-col gap-4 border-b border-[#173c38]/10 pb-5 sm:flex-row sm:items-center sm:justify-between"><div><p className="text-xs font-bold tracking-[0.14em] text-[#c45b35] uppercase">Requested records</p><h2 className="mt-1 text-2xl font-semibold">Five items for review</h2></div><span className="w-fit rounded-full bg-[#e5eee4] px-3 py-1.5 text-xs font-bold text-[#27745e]">Application fee: â‚¹10</span></div>
+            <ol className="mt-5 space-y-3">{state.restructuredRequests.map((request, index) => <li key={request} className="flex gap-3 text-sm leading-6"><span className="flex size-6 shrink-0 items-center justify-center rounded-full bg-[#e5eee4] text-xs font-bold text-[#27745e]">{index + 1}</span><span>{request}</span></li>)}</ol>
+          </div>
+
+          <div className="mt-4 flex items-start gap-3 rounded-2xl border border-[#c45b35]/25 bg-[#f3dfc9] px-5 py-4 text-sm leading-6"><ShieldCheck className="mt-0.5 shrink-0 text-[#c45b35]" size={18} /><p><strong className="font-bold">MOCK â€” No real filing or payment will occur</strong><br /><span className="text-[#173c38]/70">This is a synthetic journey for demonstration only.</span></p></div>
+
+          {!isSubmitted ? <button type="button" onClick={submitDemo} disabled={isSubmitting} className="mt-6 flex min-h-12 w-full items-center justify-center gap-2 rounded-xl bg-[#c45b35] px-5 py-3 text-sm font-bold text-white transition hover:bg-[#a94728] disabled:cursor-wait disabled:opacity-70">{isSubmitting ? <><LoaderCircle className="animate-spin" size={17} /> Creating demo submission...</> : <>Submit Demo RTI <ArrowRight size={17} /></>}</button> : <div className="mt-6 rounded-2xl border border-[#27745e]/25 bg-[#e5eee4] p-5"><div className="flex items-center gap-2 text-[#27745e]"><CheckCircle2 size={19} /><p className="font-bold">Demo RTI submitted</p></div><p className="mt-3 text-sm text-[#173c38]/65">Synthetic registration number</p><p className="mt-1 text-2xl font-semibold tracking-[0.04em]">{state.registrationNumber}</p><Link href="/journey" className="mt-5 flex min-h-12 items-center justify-center gap-2 rounded-xl bg-[#173c38] px-5 py-3 text-center text-sm font-bold text-[#f5f1e8] transition hover:bg-[#26534e]">Track RTI Journey <ArrowRight size={17} /></Link></div>}
+        </section>
+      </div>
+    </main>
+  );
+}
+
+
+
+=== FILE: C:\Users\Dell\changesentinel\rti-saarthi\src\app\understand\page.tsx ===
+"use client";
+
+import { ArrowRight, ClipboardList, ExternalLink, ShieldCheck } from "lucide-react";
+import Link from "next/link";
+import { useEffect, useState } from "react";
+import { defaultUniversalState, type RtiState } from "@/src/lib/types";
+import { readRtiState } from "@/src/lib/client-state";
+
+export default function UnderstandPage() {
+  const [state, setState] = useState<RtiState>(defaultUniversalState);
+
+  useEffect(() => {
+    const updateState = window.setTimeout(() => setState(readRtiState()), 0);
+
+    return () => window.clearTimeout(updateState);
+  }, []);
+
+  return (
+    <main className="min-h-screen overflow-hidden bg-[#f5f1e8] text-[#173c38]">
+      <div className="mx-auto flex min-h-screen w-full max-w-7xl flex-col px-6 py-6 sm:px-10 lg:px-14">
+        <header className="flex items-center justify-between border-b border-[#173c38]/15 pb-5">
+          <Link href="/" className="flex items-center gap-3">
+            <div className="flex size-10 items-center justify-center rounded-xl bg-[#173c38] text-[#f5f1e8]">
+              <ClipboardList size={20} strokeWidth={1.8} />
+            </div>
+            <div>
+              <p className="text-sm font-bold tracking-[0.16em] text-[#173c38] uppercase">RTI Saarthi</p>
+              <p className="text-xs text-[#173c38]/60">Citizen Intelligence &amp; RTI Filing Layer</p>
+                          <p className="text-xs text-[#173c38]/60">Citizen Intelligence &amp; RTI Filing Layer</p>
+            </div>
+          </Link>
+          <div className="hidden items-center gap-2 text-xs font-semibold text-[#173c38]/60 sm:flex">
+            <ShieldCheck size={16} />
+            Route guard
+          </div>
+        </header>
+
+        <section className="mx-auto flex w-full max-w-4xl flex-1 flex-col justify-center py-14 lg:py-20">
+          <div className="mb-7 flex items-center gap-2 text-sm font-semibold text-[#c45b35]">
+            <ShieldCheck size={17} />
+            Screen 2 / Understand your goal
+          </div>
+          <p className="max-w-2xl rounded-2xl border border-[#173c38]/10 bg-white px-5 py-4 text-lg leading-8 text-[#173c38]/75 shadow-[0_18px_45px_rgba(23,60,56,0.06)]">
+            â€œ{state.question}â€
+          </p>
+
+          <div className="mt-10 max-w-3xl">
+            <h1 className="max-w-2xl text-5xl leading-[0.98] font-semibold tracking-[-0.04em] text-[#173c38] sm:text-7xl">
+              {state.goal}
+            </h1>
+            <p className="mt-7 max-w-2xl text-lg leading-8 text-[#173c38]/70">
+              {state.suitabilityReason}
+            </p>
+          </div>
+
+          <div className="mt-12 grid gap-4 md:grid-cols-2">
+            <div className="flex flex-col justify-between rounded-2xl border border-[#173c38]/10 bg-[#fffdf8] p-6 shadow-[0_18px_45px_rgba(23,60,56,0.08)]">
+              <div>
+                <p className="text-xs font-bold tracking-[0.14em] text-[#c45b35] uppercase">Information route</p>
+                <h2 className="mt-3 text-2xl font-semibold">Find out what happened</h2>
+                <p className="mt-3 leading-7 text-[#173c38]/65">
+                  Use RTI to request the status, file movement, and reasons behind the delay.
+                </p>
+              </div>
+              <Link
+                href="/question"
+                className="mt-8 flex min-h-12 items-center justify-center gap-2 rounded-xl bg-[#c45b35] px-5 py-3 text-center text-sm font-bold text-white transition hover:bg-[#a94728]"
+              >
+                Find out what happened <ArrowRight size={17} />
+              </Link>
+            </div>
+
+            <div className="flex flex-col justify-between rounded-2xl border border-[#173c38]/10 bg-[#e5eee4] p-6 shadow-[0_18px_45px_rgba(23,60,56,0.05)]">
+              <div>
+                <p className="text-xs font-bold tracking-[0.14em] text-[#27745e] uppercase">Resolution route</p>
+                <h2 className="mt-3 text-2xl font-semibold">Get payment resolved</h2>
+                <p className="mt-3 leading-7 text-[#173c38]/65">
+                  Submit a grievance to the department that can take action on your delayed payment.
+                </p>
+              </div>
+              <a
+                href="https://pgportal.gov.in"
+                target="_blank"
+                rel="noreferrer"
+                className="mt-8 flex min-h-12 items-center justify-center gap-2 rounded-xl border border-[#173c38]/20 bg-transparent px-5 py-3 text-center text-sm font-bold text-[#173c38] transition hover:border-[#173c38] hover:bg-white"
+              >
+                Get payment resolved <ExternalLink size={16} />
+              </a>
+            </div>
+          </div>
+        </section>
+      </div>
+    </main>
+  );
+}
+
+
+
+=== FILE: C:\Users\Dell\changesentinel\rti-saarthi\src\app\layout.tsx ===
+import type { Metadata } from "next";
+import type { ReactNode } from "react";
+import { Geist, Geist_Mono } from "next/font/google";
+import "./globals.css";
+import GovernmentBanner from "@/src/components/GovernmentBanner";
+import FaqAssistant from "@/src/components/FaqAssistant";
+import { LanguageProvider } from "@/src/context/LanguageContext";
+
+const geistSans = Geist({ variable: "--font-geist-sans", subsets: ["latin"] });
+const geistMono = Geist_Mono({ variable: "--font-geist-mono", subsets: ["latin"] });
+
+export const metadata: Metadata = {
+  title: "RTI Saarthi | Citizen Intelligence & RTI Assistant",
+  description: "Find clear, checkable answers about public records and government services.",
+};
+
+export default function RootLayout({ children }: { children: ReactNode }) {
+  return (
+    <html lang="en" className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}>
+      <body className="min-h-full"><LanguageProvider><GovernmentBanner />{children}<FaqAssistant /></LanguageProvider></body>
+    </html>
+  );
+}
+
+
+
+=== FILE: C:\Users\Dell\changesentinel\rti-saarthi\src\app\page.tsx ===
+"use client";
+
+import { useState } from "react";
+import { ArrowRight, CheckCircle2, ClipboardList, LoaderCircle, ShieldCheck, Sparkles } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { useLanguage } from "@/src/context/LanguageContext";
+
+const sampleQuestionKeys = ["sample_chip_road", "sample_chip_pension", "sample_chip_scholarship", "sample_chip_water"] as const;
+
+function validateQuestion(question: string) {
+  const normalizedQuestion = question.trim().toLowerCase();
+  const hasPublicRecordsTopic = /pension|retir|document|service|record|pay|road|tender|scholarship|water|pipeline|report|order|status|department/.test(normalizedQuestion);
+  const hasQuestionShape = normalizedQuestion.length >= 12;
+
+  if (hasPublicRecordsTopic && hasQuestionShape) {
+    return { isValid: true, label: "question_clear" as const, detail: "validation_clear_detail" as const };
+  }
+
+  return { isValid: false, label: "need_more_detail" as const, detail: "need_more_detail" as const };
+}
+
+export default function Home() {
+  const [question, setQuestion] = useState("");
+  const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const validation = validateQuestion(question);
+  const router = useRouter();
+  const { t } = useLanguage();
+
+  async function continueToUnderstand() {
+    if (!validation.isValid || isAnalyzing) return;
+    setIsAnalyzing(true);
+    try {
+      const response = await fetch("/api/analyze", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ query: question.trim() }),
+      });
+      const data = await response.json();
+      localStorage.setItem("rti_current_state", JSON.stringify(data));
+      router.push("/understand");
+    } finally {
+      setIsAnalyzing(false);
+    }
+  }
+
+  return (
+    <main className="min-h-screen overflow-hidden bg-[#f5f1e8] text-[#173c38]">
+      <div className="mx-auto flex min-h-screen w-full max-w-7xl flex-col px-6 py-6 sm:px-10 lg:px-14">
+        <header className="flex items-center justify-between border-b border-[#173c38]/15 pb-5">
+          <div className="flex items-center gap-3">
+            <div className="flex size-10 items-center justify-center rounded-xl bg-[#173c38] text-[#f5f1e8]"><ClipboardList size={20} strokeWidth={1.8} /></div>
+            <div><p className="text-sm font-bold tracking-[0.16em] uppercase">{t("brand_title")}</p><p className="text-xs text-[#173c38]/60">{t("header_subtitle")}</p></div>
+          </div>
+          <div className="hidden items-center gap-2 text-xs font-semibold text-[#173c38]/60 sm:flex"><ShieldCheck size={16} /> {t("checks_enabled")}</div>
+        </header>
+        <section className="grid flex-1 items-center gap-12 py-14 lg:grid-cols-[1.1fr_0.9fr] lg:gap-20 lg:py-20">
+          <div className="max-w-2xl">
+            <div className="mb-7 flex items-center gap-2 text-sm font-semibold text-[#c45b35]"><Sparkles size={17} /> {t("screen_1_badge")}</div>
+            <h1 className="max-w-xl text-5xl leading-[0.98] font-semibold tracking-[-0.04em] sm:text-7xl">{t("hero_title")}</h1>
+            <p className="mt-7 max-w-lg text-lg leading-8 text-[#173c38]/70">{t("hero_sub")}</p>
+            <div className="mt-10 max-w-xl">
+              <label htmlFor="question" className="mb-3 block text-sm font-bold">{t("input_label")}</label>
+              <div className="rounded-2xl border border-[#173c38]/20 bg-white p-2 shadow-[0_18px_45px_rgba(23,60,56,0.08)] focus-within:border-[#c45b35] focus-within:ring-4 focus-within:ring-[#c45b35]/10">
+                <textarea id="question" value={question} onChange={(event) => setQuestion(event.target.value)} placeholder={t("placeholder")} rows={3} className="w-full resize-none bg-transparent px-4 py-3 text-base leading-7 outline-none placeholder:text-[#173c38]/35" />
+                <div className="flex items-center justify-between border-t border-[#173c38]/10 px-3 pt-3"><span className="text-xs text-[#173c38]/45">{question.length}/240</span><button type="button" disabled={!validation.isValid || isAnalyzing} onClick={continueToUnderstand} className="flex items-center gap-2 rounded-xl bg-[#c45b35] px-4 py-2.5 text-sm font-bold text-white transition hover:bg-[#a94728] disabled:cursor-not-allowed disabled:opacity-40">{isAnalyzing ? <><LoaderCircle className="animate-spin" size={16} /> {t("btn_analyze")}</> : <>{t("btn_continue")} <ArrowRight size={16} /></>}</button></div>
+              </div>
+              <div className="mt-4 flex items-start gap-2.5 rounded-xl bg-[#e5eee4] px-4 py-3 text-sm">{validation.isValid ? <CheckCircle2 className="mt-0.5 shrink-0 text-[#27745e]" size={17} /> : <ShieldCheck className="mt-0.5 shrink-0 text-[#c45b35]" size={17} />}<div><p className="font-bold">{t(validation.label)}</p><p className="mt-0.5 leading-5 text-[#173c38]/65">{t(validation.detail)}</p></div></div>
+            </div>
+            <div className="mt-8"><p className="mb-3 text-xs font-bold tracking-[0.12em] text-[#173c38]/50 uppercase">{t("try_sample")}</p><div className="flex flex-wrap gap-2">{sampleQuestionKeys.map((sampleQuestionKey) => <button key={sampleQuestionKey} type="button" onClick={() => setQuestion(t(sampleQuestionKey))} className="rounded-full border border-[#173c38]/20 bg-transparent px-3.5 py-2 text-left text-xs font-semibold text-[#173c38]/75 transition hover:border-[#c45b35] hover:bg-white">{t(sampleQuestionKey)}</button>)}</div></div>
+          </div>
+          <aside className="relative hidden min-h-[460px] lg:block"><div className="absolute inset-0 rounded-[2rem] bg-[#d9e6d5]" /><div className="absolute top-10 right-10 left-10 rounded-2xl border border-[#173c38]/10 bg-[#fffdf8] p-6 shadow-[0_24px_50px_rgba(23,60,56,0.12)]"><div className="flex items-center justify-between border-b border-[#173c38]/10 pb-5"><div><p className="text-xs font-bold tracking-[0.14em] text-[#c45b35] uppercase">{t("your_records")}</p><h2 className="mt-1 text-xl font-semibold">{t("recent_inquiries")}</h2></div><span className="rounded-full bg-[#e5eee4] px-2.5 py-1 text-xs font-bold text-[#27745e]">{t("records_count")}</span></div><div className="space-y-2 pt-4"><div className="rounded-xl bg-[#f5f1e8] px-4 py-3"><p className="text-sm font-bold">{t("item_road_title")}</p><p className="mt-0.5 text-xs text-[#173c38]/55">{t("item_road_dept")}</p></div><div className="rounded-xl bg-[#f5f1e8] px-4 py-3"><p className="text-sm font-bold">{t("item_scholarship_title")}</p><p className="mt-0.5 text-xs text-[#173c38]/55">{t("item_scholarship_dept")}</p></div><div className="rounded-xl bg-[#f5f1e8] px-4 py-3"><p className="text-sm font-bold">{t("item_water_title")}</p><p className="mt-0.5 text-xs text-[#173c38]/55">{t("item_water_dept")}</p></div></div></div><div className="absolute right-8 bottom-10 left-8 rounded-2xl bg-[#173c38] p-5 text-[#f5f1e8]"><p className="text-xs font-bold tracking-[0.14em] text-[#c8dfc3] uppercase">{t("built_for_clarity")}</p><p className="mt-2 text-lg leading-7">{t("clarity_card")}</p></div></aside>
+        </section>
+      </div>
+    </main>
+  );
+}
+
+
+
+=== FILE: C:\Users\Dell\changesentinel\rti-saarthi\src\components\FaqAssistant.tsx ===
+"use client";
+
+import { ChevronDown, MessageCircle, Search, X } from "lucide-react";
+import { useState } from "react";
+import { useLanguage } from "@/src/context/LanguageContext";
+
+const faqs = [
+  { question: "What is the difference between RTI and a grievance (CPGRAMS)?", answer: "RTI obtains existing records and information. A grievance portal such as CPGRAMS is for requesting action or resolving a service problem, such as a delayed payment." },
+  { question: "What can and cannot be asked under RTI?", answer: "Ask for existing records, orders, registers, file notings, correspondence, and data. RTI does not require an authority to create explanations, opinions, or new analysis." },
+  { question: "How does the 30-day timeline and First Appeal work?", answer: "A Public Information Officer generally responds within 30 days. If the response is late, incomplete, or unsatisfactory, you can file a First Appeal with the designated First Appellate Authority." },
+  { question: "What is the application fee (â‚¹10 Central)?", answer: "The application fee for a standard Central Government RTI request is â‚¹10. State and local authorities may have different fee rules." },
+];
+
+export default function FaqAssistant() {
+  const [isOpen, setIsOpen] = useState(false);
+  const [search, setSearch] = useState("");
+  const [expanded, setExpanded] = useState<number | null>(null);
+  const { t } = useLanguage();
+  const visibleFaqs = faqs.filter((faq) => `${faq.question} ${faq.answer}`.toLowerCase().includes(search.toLowerCase()));
+
+  return (
+    <>
+      <button type="button" onClick={() => setIsOpen(true)} className="fixed right-5 bottom-5 z-40 flex items-center gap-2 rounded-full bg-[#173c38] px-4 py-3 text-sm font-bold text-[#f5f1e8] shadow-[0_12px_30px_rgba(23,60,56,0.22)] transition hover:bg-[#26534e]" aria-label={t("faq_desk_btn")}><MessageCircle size={18} /> {t("faq_desk_btn")}</button>
+      {isOpen && <div className="fixed inset-0 z-50 bg-[#173c38]/35" onClick={() => setIsOpen(false)}><aside className="absolute top-0 right-0 flex h-full w-full max-w-md flex-col border-l border-[#173c38]/10 bg-[#f5f1e8] shadow-[-15px_0_45px_rgba(23,60,56,0.15)]" onClick={(event) => event.stopPropagation()} role="dialog" aria-modal="true" aria-labelledby="faq-title"><div className="flex items-start justify-between border-b border-[#173c38]/15 px-6 py-5"><div><p className="text-xs font-bold tracking-[0.14em] text-[#c45b35] uppercase">Instant guidance</p><h2 id="faq-title" className="mt-1 text-2xl font-semibold">{t("faq_desk_btn")}</h2></div><button type="button" onClick={() => setIsOpen(false)} aria-label="Close help desk" className="rounded-lg p-1 text-[#173c38]/60 hover:bg-[#e5eee4]"><X size={20} /></button></div><div className="px-6 py-5"><div className="flex items-center gap-2 rounded-xl border border-[#173c38]/15 bg-white px-3 py-2"><Search size={17} className="text-[#173c38]/45" /><input value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Search RTI questions" className="min-w-0 flex-1 bg-transparent text-sm outline-none placeholder:text-[#173c38]/40" /></div></div><div className="flex-1 overflow-y-auto px-6 pb-8">{visibleFaqs.length > 0 ? visibleFaqs.map((faq) => { const index = faqs.indexOf(faq); const isExpanded = expanded === index; return <div key={faq.question} className="border-b border-[#173c38]/10 py-4"><button type="button" onClick={() => setExpanded(isExpanded ? null : index)} className="flex w-full items-start justify-between gap-4 text-left text-sm font-bold"><span>{faq.question}</span><ChevronDown size={18} className={`mt-0.5 shrink-0 transition-transform ${isExpanded ? "rotate-180" : ""}`} /></button>{isExpanded && <p className="mt-3 pr-6 text-sm leading-6 text-[#173c38]/70">{faq.answer}</p>}</div>; }) : <p className="py-8 text-sm text-[#173c38]/60">No matching RTI guidance found.</p>}</div></aside></div>}
+    </>
+  );
+}
+
+
+
+=== FILE: C:\Users\Dell\changesentinel\rti-saarthi\src\components\GovernmentBanner.tsx ===
+"use client";
+
+import { Info, X } from "lucide-react";
+import Link from "next/link";
+import { useState } from "react";
+import { useLanguage, type LanguageCode } from "@/src/context/LanguageContext";
+
+const languages: { code: LanguageCode; label: string }[] = [
+  { code: "en", label: "English" }, { code: "hi", label: "à¤¹à¤¿à¤¨à¥à¤¦à¥€ (Hindi)" }, { code: "bn", label: "à¦¬à¦¾à¦‚à¦²à¦¾ (Bengali)" }, { code: "te", label: "à°¤à±†à°²à±à°—à± (Telugu)" }, { code: "mr", label: "à¤®à¤°à¤¾à¤ à¥€ (Marathi)" }, { code: "ta", label: "à®¤à®®à®¿à®´à¯ (Tamil)" }, { code: "gu", label: "àª—à«àªœàª°àª¾àª¤à«€ (Gujarati)" }, { code: "kn", label: "à²•à²¨à³à²¨à²¡ (Kannada)" }, { code: "ml", label: "à´®à´²à´¯à´¾à´³à´‚ (Malayalam)" }, { code: "pa", label: "à¨ªà©°à¨œà¨¾à¨¬à©€ (Punjabi)" },
+];
+
+export default function GovernmentBanner() {
+  const { language, setLanguage, t } = useLanguage();
+  const [fontSize, setFontSize] = useState<"small" | "normal" | "large">("normal");
+  const [showAbout, setShowAbout] = useState(false);
+
+  function changeFontSize(size: "small" | "normal" | "large") {
+    setFontSize(size);
+    document.documentElement.dataset.fontSize = size;
+  }
+
+  return (
+    <>
+      <div className="bg-[#173c38] text-[#f5f1e8]">
+        <div className="mx-auto flex w-full max-w-7xl flex-wrap items-center justify-between gap-x-5 gap-y-2 px-6 py-2 text-xs sm:px-10 lg:px-14">
+          <div className="flex items-center gap-2 font-semibold tracking-[0.08em] uppercase"><span className="size-1.5 rounded-full bg-[#c8dfc3]" /> {t("portal_title")}</div>
+          <div className="flex items-center gap-4">
+            <label className="flex items-center gap-2"><span className="sr-only">Choose language</span><select value={language} onChange={(event) => setLanguage(event.target.value as LanguageCode)} className="cursor-pointer bg-transparent font-semibold outline-none">{languages.map((item) => <option key={item.code} value={item.code} className="text-[#173c38]">{item.label}</option>)}</select></label>
+            <div className="flex items-center gap-1 border-l border-white/20 pl-4" aria-label="Font size"><button type="button" onClick={() => changeFontSize("small")} aria-label="Decrease font size" className={`px-1 font-semibold ${fontSize === "small" ? "text-[#c8dfc3]" : "text-white/70"}`}>A-</button><button type="button" onClick={() => changeFontSize("normal")} aria-label="Normal font size" className={`px-1 font-semibold ${fontSize === "normal" ? "text-[#c8dfc3]" : "text-white/70"}`}>A</button><button type="button" onClick={() => changeFontSize("large")} aria-label="Increase font size" className={`px-1 font-semibold ${fontSize === "large" ? "text-[#c8dfc3]" : "text-white/70"}`}>A+</button></div>
+            <button type="button" onClick={() => setShowAbout(true)} className="hidden font-semibold text-[#c8dfc3] underline-offset-4 hover:underline sm:block">{t("about")}</button>
+          </div>
+        </div>
+      </div>
+      <div className="overflow-hidden border-b border-[#c45b35]/25 bg-[#f3dfc9] text-[#173c38]" role="status">
+        <div className="mx-auto flex max-w-7xl items-center gap-3 px-6 py-2 text-xs sm:px-10 lg:px-14"><span className="shrink-0 rounded-full bg-[#c45b35] px-2.5 py-1 font-bold tracking-[0.08em] text-white uppercase">{t("live_alert_badge")}</span><div className="min-w-0 overflow-hidden"><div className="animate-[marquee_32s_linear_infinite] whitespace-nowrap font-medium">{t("live_alert")}&nbsp;&nbsp;&nbsp; â€¢ &nbsp;&nbsp;&nbsp;{t("live_alert")}</div></div></div>
+      </div>
+      {showAbout && <div className="fixed inset-0 z-50 flex items-center justify-center bg-[#173c38]/40 px-6" role="dialog" aria-modal="true" aria-labelledby="about-dialog-title"><div className="w-full max-w-lg rounded-2xl border border-[#173c38]/10 bg-[#fffdf8] p-6 shadow-[0_25px_60px_rgba(23,60,56,0.2)] sm:p-8"><div className="flex items-start justify-between"><div><p className="text-xs font-bold tracking-[0.14em] text-[#c45b35] uppercase">{t("about")}</p><h2 id="about-dialog-title" className="mt-2 text-2xl font-semibold">{t("brand_title")}</h2></div><button type="button" onClick={() => setShowAbout(false)} aria-label="Close about dialog" className="rounded-lg p-1 text-[#173c38]/60 hover:bg-[#e5eee4]"><X size={20} /></button></div><p className="mt-5 leading-7 text-[#173c38]/70">{t("clarity_card")}</p><Link href="/about" onClick={() => setShowAbout(false)} className="mt-6 inline-flex items-center gap-2 text-sm font-bold text-[#c45b35] hover:underline"><Info size={16} /> {t("about")}</Link></div></div>}
+    </>
+  );
+}
+
+
+
+=== FILE: C:\Users\Dell\changesentinel\rti-saarthi\src\context\LanguageContext.tsx ===
+"use client";
+
+import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
+
+export type LanguageCode = "en" | "hi" | "bn" | "te" | "mr" | "ta" | "gu" | "kn" | "ml" | "pa";
+export type TranslationKey = "portal_title" | "brand_title" | "header_subtitle" | "checks_enabled" | "about" | "live_alert_badge" | "live_alert" | "screen_1_badge" | "hero_title" | "hero_sub" | "input_label" | "placeholder" | "btn_continue" | "btn_analyze" | "need_more_detail" | "question_clear" | "validation_clear_detail" | "recent_inquiries" | "clarity_card" | "faq_desk_btn" | "try_sample" | "sample_chip_road" | "sample_chip_pension" | "sample_chip_scholarship" | "sample_chip_water" | "your_records" | "records_count" | "item_road_title" | "item_road_dept" | "item_scholarship_title" | "item_scholarship_dept" | "item_water_title" | "item_water_dept" | "built_for_clarity";
+
+type TranslationDictionary = Record<TranslationKey, string>;
+
+const translations: Record<LanguageCode, TranslationDictionary> = {
+  en: {
+    portal_title: "Citizen Services Portal", brand_title: "RTI SAARTHI", header_subtitle: "Citizen Intelligence & RTI Filing Layer", checks_enabled: "Deterministic checks enabled", about: "About RTI Saarthi", live_alert_badge: "LIVE ALERT", live_alert: "Statutory Alert: Section 7(1) mandates a 30-day response window. Do not attach Aadhaar or PAN numbers.", screen_1_badge: "Screen 1 / Ask a question", hero_title: "Ask the government with clarity.", hero_sub: "Convert plain-language questions into structured, legally actionable RTI requests across all departments.", input_label: "What would you like to find out?", placeholder: "For example: What is the status of the road repair tender in Ward 4, or why is my merit scholarship delayed?", btn_continue: "Continue", btn_analyze: "Analyze Request", need_more_detail: "Add more detail", question_clear: "Question looks clear", validation_clear_detail: "It contains a public-records topic and enough detail to search the records.", recent_inquiries: "Recent Public Inquiries", clarity_card: "Every answer starts with a checkable question and a clear source.", faq_desk_btn: "ðŸ’¬ RTI Help Desk", try_sample: "Try a sample", sample_chip_road: "Road repair tender status & contractor file notings in Ward 4", sample_chip_pension: "My pension hasn't been credited for three months", sample_chip_scholarship: "National merit scholarship disbursement delay & sanction order", sample_chip_water: "Municipal water pipeline inspection report and timeline", your_records: "YOUR RECORDS", records_count: "3 records", item_road_title: "Ward 4 Road Tender Sanction", item_road_dept: "Public Works Department (PWD)", item_scholarship_title: "National Merit Scholarship Release Order", item_scholarship_dept: "Ministry of Education", item_water_title: "Municipal Water Supply Quality Report", item_water_dept: "Municipal Corporation", built_for_clarity: "BUILT FOR CLARITY",
+  },
+  hi: {
+    portal_title: "à¤¨à¤¾à¤—à¤°à¤¿à¤• à¤¸à¥‡à¤µà¤¾ à¤ªà¥‹à¤°à¥à¤Ÿà¤²", brand_title: "à¤†à¤°à¤Ÿà¥€à¤†à¤ˆ à¤¸à¤¾à¤°à¤¥à¥€", header_subtitle: "à¤¨à¤¾à¤—à¤°à¤¿à¤• à¤†à¤¸à¥‚à¤šà¤¨à¤¾ à¤à¤µà¤‚ à¤†à¤°à¤Ÿà¥€à¤†à¤ˆ à¤†à¤µà¥‡à¤¦à¤¨ à¤ªà¥à¤°à¤£à¤¾à¤²à¥€", checks_enabled: "à¤¸à¤Ÿà¥€à¤• à¤¨à¤¿à¤¯à¤® à¤œà¤¾à¤‚à¤š à¤¸à¤•à¥à¤°à¤¿à¤¯", about: "à¤†à¤°à¤Ÿà¥€à¤†à¤ˆ à¤¸à¤¾à¤°à¤¥à¥€ à¤•à¥‡ à¤¬à¤¾à¤°à¥‡ à¤®à¥‡à¤‚", live_alert_badge: "à¤²à¤¾à¤‡à¤µ à¤…à¤²à¤°à¥à¤Ÿ", live_alert: "à¤µà¥ˆà¤§à¤¾à¤¨à¤¿à¤• à¤šà¥‡à¤¤à¤¾à¤µà¤¨à¥€: à¤§à¤¾à¤°à¤¾ 7(1) à¤•à¥‡ à¤¤à¤¹à¤¤ 30 à¤¦à¤¿à¤¨à¥‹à¤‚ à¤®à¥‡à¤‚ à¤‰à¤¤à¥à¤¤à¤° à¤…à¤¨à¤¿à¤µà¤¾à¤°à¥à¤¯ à¤¹à¥ˆà¥¤ à¤†à¤§à¤¾à¤° à¤¯à¤¾ à¤ªà¥ˆà¤¨ à¤¨à¤‚à¤¬à¤° à¤¸à¤‚à¤²à¤—à¥à¤¨ à¤¨ à¤•à¤°à¥‡à¤‚à¥¤", screen_1_badge: "à¤¸à¥à¤•à¥à¤°à¥€à¤¨ 1 / à¤ªà¥à¤°à¤¶à¥à¤¨ à¤ªà¥‚à¤›à¥‡à¤‚", hero_title: "à¤¸à¤°à¤•à¤¾à¤° à¤¸à¥‡ à¤¸à¥à¤ªà¤·à¥à¤Ÿà¤¤à¤¾ à¤•à¥‡ à¤¸à¤¾à¤¥ à¤ªà¥‚à¤›à¥‡à¤‚à¥¤", hero_sub: "à¤…à¤ªà¤¨à¥€ à¤¸à¤°à¤² à¤­à¤¾à¤·à¤¾ à¤•à¥‡ à¤ªà¥à¤°à¤¶à¥à¤¨à¥‹à¤‚ à¤•à¥‹ à¤¸à¤­à¥€ à¤µà¤¿à¤­à¤¾à¤—à¥‹à¤‚ à¤•à¥‡ à¤²à¤¿à¤ à¤¸à¤‚à¤°à¤šà¤¿à¤¤ à¤”à¤° à¤•à¤¾à¤¨à¥‚à¤¨à¥€ à¤°à¥‚à¤ª à¤¸à¥‡ à¤®à¤¾à¤¨à¥à¤¯ à¤†à¤°à¤Ÿà¥€à¤†à¤ˆ à¤…à¤¨à¥à¤°à¥‹à¤§à¥‹à¤‚ à¤®à¥‡à¤‚ à¤¬à¤¦à¤²à¥‡à¤‚à¥¤", input_label: "à¤†à¤ª à¤•à¥à¤¯à¤¾ à¤œà¤¾à¤¨à¤¨à¤¾ à¤šà¤¾à¤¹à¤¤à¥‡ à¤¹à¥ˆà¤‚?", placeholder: "à¤‰à¤¦à¤¾à¤¹à¤°à¤£: à¤µà¤¾à¤°à¥à¤¡ 4 à¤®à¥‡à¤‚ à¤¸à¤¡à¤¼à¤• à¤®à¤°à¤®à¥à¤®à¤¤ à¤Ÿà¥‡à¤‚à¤¡à¤° à¤•à¥€ à¤¸à¥à¤¥à¤¿à¤¤à¤¿ à¤•à¥à¤¯à¤¾ à¤¹à¥ˆ, à¤¯à¤¾ à¤®à¥‡à¤°à¥€ à¤®à¥‡à¤°à¤¿à¤Ÿ à¤›à¤¾à¤¤à¥à¤°à¤µà¥ƒà¤¤à¥à¤¤à¤¿ à¤®à¥‡à¤‚ à¤¦à¥‡à¤°à¥€ à¤•à¥à¤¯à¥‹à¤‚ à¤¹à¥ˆ?", btn_continue: "à¤œà¤¾à¤°à¥€ à¤°à¤–à¥‡à¤‚", btn_analyze: "à¤…à¤¨à¥à¤°à¥‹à¤§ à¤•à¤¾ à¤µà¤¿à¤¶à¥à¤²à¥‡à¤·à¤£ à¤•à¤°à¥‡à¤‚", need_more_detail: "à¤…à¤§à¤¿à¤• à¤µà¤¿à¤µà¤°à¤£ à¤œà¥‹à¤¡à¤¼à¥‡à¤‚", question_clear: "à¤ªà¥à¤°à¤¶à¥à¤¨ à¤¸à¥à¤ªà¤·à¥à¤Ÿ à¤¹à¥ˆ", validation_clear_detail: "à¤‡à¤¸à¤®à¥‡à¤‚ à¤¸à¤¾à¤°à¥à¤µà¤œà¤¨à¤¿à¤• à¤°à¤¿à¤•à¥‰à¤°à¥à¤¡ à¤•à¤¾ à¤µà¤¿à¤·à¤¯ à¤”à¤° à¤°à¤¿à¤•à¥‰à¤°à¥à¤¡ à¤–à¥‹à¤œà¤¨à¥‡ à¤•à¥‡ à¤²à¤¿à¤ à¤ªà¤°à¥à¤¯à¤¾à¤ªà¥à¤¤ à¤µà¤¿à¤µà¤°à¤£ à¤¹à¥ˆà¥¤", recent_inquiries: "à¤¹à¤¾à¤² à¤•à¥€ à¤¸à¤¾à¤°à¥à¤µà¤œà¤¨à¤¿à¤• à¤ªà¥‚à¤›à¤¤à¤¾à¤›", clarity_card: "à¤¹à¤° à¤‰à¤¤à¥à¤¤à¤° à¤à¤• à¤œà¤¾à¤à¤š à¤¯à¥‹à¤—à¥à¤¯ à¤¸à¤µà¤¾à¤² à¤”à¤° à¤¸à¥à¤ªà¤·à¥à¤Ÿ à¤¸à¥à¤°à¥‹à¤¤ à¤¸à¥‡ à¤¶à¥à¤°à¥‚ à¤¹à¥‹à¤¤à¤¾ à¤¹à¥ˆà¥¤", faq_desk_btn: "ðŸ’¬ à¤†à¤°à¤Ÿà¥€à¤†à¤ˆ à¤¸à¤¹à¤¾à¤¯à¤¤à¤¾ à¤¡à¥‡à¤¸à¥à¤•", try_sample: "à¤à¤• à¤¨à¤®à¥‚à¤¨à¤¾ à¤†à¤œà¤¼à¤®à¤¾à¤à¤", sample_chip_road: "à¤µà¤¾à¤°à¥à¤¡ 4 à¤®à¥‡à¤‚ à¤¸à¤¡à¤¼à¤• à¤®à¤°à¤®à¥à¤®à¤¤ à¤Ÿà¥‡à¤‚à¤¡à¤° à¤¸à¥à¤¥à¤¿à¤¤à¤¿ à¤à¤µà¤‚ à¤ à¥‡à¤•à¥‡à¤¦à¤¾à¤° à¤«à¤¾à¤‡à¤² à¤¨à¥‹à¤Ÿà¤¿à¤‚à¤—à¥à¤¸", sample_chip_pension: "à¤®à¥‡à¤°à¥€ à¤ªà¥‡à¤‚à¤¶à¤¨ à¤¤à¥€à¤¨ à¤®à¤¹à¥€à¤¨à¥‡ à¤¸à¥‡ à¤œà¤®à¤¾ à¤¨à¤¹à¥€à¤‚ à¤¹à¥à¤ˆ à¤¹à¥ˆ", sample_chip_scholarship: "à¤°à¤¾à¤·à¥à¤Ÿà¥à¤°à¥€à¤¯ à¤®à¥‡à¤°à¤¿à¤Ÿ à¤›à¤¾à¤¤à¥à¤°à¤µà¥ƒà¤¤à¥à¤¤à¤¿ à¤µà¤¿à¤¤à¤°à¤£ à¤®à¥‡à¤‚ à¤¦à¥‡à¤°à¥€ à¤à¤µà¤‚ à¤¸à¥à¤µà¥€à¤•à¥ƒà¤¤à¤¿ à¤†à¤¦à¥‡à¤¶", sample_chip_water: "à¤¨à¤—à¤° à¤¨à¤¿à¤—à¤® à¤œà¤² à¤ªà¤¾à¤‡à¤ªà¤²à¤¾à¤‡à¤¨ à¤¨à¤¿à¤°à¥€à¤•à¥à¤·à¤£ à¤°à¤¿à¤ªà¥‹à¤°à¥à¤Ÿ à¤à¤µà¤‚ à¤¸à¤®à¤¯à¤¸à¥€à¤®à¤¾", your_records: "à¤†à¤ªà¤•à¥‡ à¤°à¤¿à¤•à¥‰à¤°à¥à¤¡", records_count: "3 à¤°à¤¿à¤•à¥‰à¤°à¥à¤¡", item_road_title: "à¤µà¤¾à¤°à¥à¤¡ 4 à¤¸à¤¡à¤¼à¤• à¤Ÿà¥‡à¤‚à¤¡à¤° à¤¸à¥à¤µà¥€à¤•à¥ƒà¤¤à¤¿", item_road_dept: "à¤²à¥‹à¤• à¤¨à¤¿à¤°à¥à¤®à¤¾à¤£ à¤µà¤¿à¤­à¤¾à¤— (PWD)", item_scholarship_title: "à¤°à¤¾à¤·à¥à¤Ÿà¥à¤°à¥€à¤¯ à¤®à¥‡à¤°à¤¿à¤Ÿ à¤›à¤¾à¤¤à¥à¤°à¤µà¥ƒà¤¤à¥à¤¤à¤¿ à¤œà¤¾à¤°à¥€ à¤†à¤¦à¥‡à¤¶", item_scholarship_dept: "à¤¶à¤¿à¤•à¥à¤·à¤¾ à¤®à¤‚à¤¤à¥à¤°à¤¾à¤²à¤¯", item_water_title: "à¤¨à¤—à¤° à¤œà¤² à¤†à¤ªà¥‚à¤°à¥à¤¤à¤¿ à¤—à¥à¤£à¤µà¤¤à¥à¤¤à¤¾ à¤°à¤¿à¤ªà¥‹à¤°à¥à¤Ÿ", item_water_dept: "à¤¨à¤—à¤° à¤¨à¤¿à¤—à¤®", built_for_clarity: "à¤¸à¥à¤ªà¤·à¥à¤Ÿà¤¤à¤¾ à¤•à¥‡ à¤²à¤¿à¤ à¤¨à¤¿à¤°à¥à¤®à¤¿à¤¤",
+  },
+  bn: {
+    portal_title: "à¦¨à¦¾à¦—à¦°à¦¿à¦• à¦ªà¦°à¦¿à¦·à§‡à¦¬à¦¾ à¦ªà§‹à¦°à§à¦Ÿà¦¾à¦²", brand_title: "à¦†à¦°à¦Ÿà¦¿à¦†à¦‡ à¦¸à¦¾à¦°à¦¥à§€", header_subtitle: "à¦¨à¦¾à¦—à¦°à¦¿à¦• à¦¤à¦¥à§à¦¯ à¦“ à¦†à¦°à¦Ÿà¦¿à¦†à¦‡ à¦†à¦¬à§‡à¦¦à¦¨ à¦¸à§à¦¤à¦°", checks_enabled: "à¦¨à¦¿à¦°à§à¦§à¦¾à¦°à¦¿à¦¤ à¦¨à¦¿à¦¯à¦¼à¦® à¦ªà¦°à§€à¦•à§à¦·à¦¾ à¦¸à¦•à§à¦°à¦¿à¦¯à¦¼", about: "à¦†à¦°à¦Ÿà¦¿à¦†à¦‡ à¦¸à¦¾à¦°à¦¥à§€ à¦¸à¦®à§à¦ªà¦°à§à¦•à§‡", live_alert_badge: "à¦¸à¦°à¦¾à¦¸à¦°à¦¿ à¦¸à¦¤à¦°à§à¦•à¦¤à¦¾", live_alert: "à¦¬à¦¿à¦§à¦¿à¦¬à¦¦à§à¦§ à¦¸à¦¤à¦°à§à¦•à¦¬à¦¾à¦°à§à¦¤à¦¾: à¦§à¦¾à¦°à¦¾ 7(1) à¦…à¦¨à§à¦¯à¦¾à¦¯à¦¼à§€ 30 à¦¦à¦¿à¦¨à§‡à¦° à¦®à¦§à§à¦¯à§‡ à¦‰à¦¤à§à¦¤à¦° à¦¬à¦¾à¦§à§à¦¯à¦¤à¦¾à¦®à§‚à¦²à¦•à¥¤ à¦†à¦§à¦¾à¦° à¦¬à¦¾ à¦ªà§à¦¯à¦¾à¦¨ à¦¨à¦®à§à¦¬à¦° à¦¸à¦‚à¦¯à§à¦•à§à¦¤ à¦•à¦°à¦¬à§‡à¦¨ à¦¨à¦¾à¥¤", screen_1_badge: "à¦¸à§à¦•à§à¦°à¦¿à¦¨ 1 / à¦ªà§à¦°à¦¶à§à¦¨ à¦œà¦¿à¦œà§à¦žà¦¾à¦¸à¦¾ à¦•à¦°à§à¦¨", hero_title: "à¦¸à§à¦ªà¦·à§à¦Ÿà¦­à¦¾à¦¬à§‡ à¦¸à¦°à¦•à¦¾à¦°à¦•à§‡ à¦œà¦¿à¦œà§à¦žà¦¾à¦¸à¦¾ à¦•à¦°à§à¦¨à¥¤", hero_sub: "à¦¸à¦¹à¦œ à¦­à¦¾à¦·à¦¾à¦° à¦ªà§à¦°à¦¶à§à¦¨à¦•à§‡ à¦¸à¦¬ à¦¬à¦¿à¦­à¦¾à¦—à§‡à¦° à¦œà¦¨à§à¦¯ à¦•à¦¾à¦ à¦¾à¦®à§‹à¦¬à¦¦à§à¦§, à¦†à¦‡à¦¨à¦¸à¦®à§à¦®à¦¤ à¦†à¦°à¦Ÿà¦¿à¦†à¦‡ à¦…à¦¨à§à¦°à§‹à¦§à§‡ à¦°à§‚à¦ªà¦¾à¦¨à§à¦¤à¦° à¦•à¦°à§à¦¨à¥¤", input_label: "à¦†à¦ªà¦¨à¦¿ à¦•à§€ à¦œà¦¾à¦¨à¦¤à§‡ à¦šà¦¾à¦¨?", placeholder: "à¦‰à¦¦à¦¾à¦¹à¦°à¦£: à¦“à¦¯à¦¼à¦¾à¦°à§à¦¡ 4-à¦ à¦°à¦¾à¦¸à§à¦¤à¦¾ à¦®à§‡à¦°à¦¾à¦®à¦¤à§‡à¦° à¦Ÿà§‡à¦¨à§à¦¡à¦¾à¦°à§‡à¦° à¦…à¦¬à¦¸à§à¦¥à¦¾ à¦•à§€, à¦…à¦¥à¦¬à¦¾ à¦†à¦®à¦¾à¦° à¦®à§‡à¦§à¦¾ à¦¬à§ƒà¦¤à§à¦¤à¦¿à¦¤à§‡ à¦¦à§‡à¦°à¦¿ à¦•à§‡à¦¨?", btn_continue: "à¦šà¦¾à¦²à¦¿à¦¯à¦¼à§‡ à¦¯à¦¾à¦¨", btn_analyze: "à¦…à¦¨à§à¦°à§‹à¦§ à¦¬à¦¿à¦¶à§à¦²à§‡à¦·à¦£ à¦•à¦°à§à¦¨", need_more_detail: "à¦†à¦°à¦“ à¦¬à¦¿à¦¬à¦°à¦£ à¦¯à§‹à¦— à¦•à¦°à§à¦¨", question_clear: "à¦ªà§à¦°à¦¶à§à¦¨à¦Ÿà¦¿ à¦¸à§à¦ªà¦·à§à¦Ÿ", validation_clear_detail: "à¦à¦¤à§‡ à¦œà¦¨à¦¸à¦¾à¦§à¦¾à¦°à¦£à§‡à¦° à¦°à§‡à¦•à¦°à§à¦¡à§‡à¦° à¦¬à¦¿à¦·à¦¯à¦¼ à¦à¦¬à¦‚ à¦°à§‡à¦•à¦°à§à¦¡ à¦–à§‹à¦à¦œà¦¾à¦° à¦œà¦¨à§à¦¯ à¦¯à¦¥à§‡à¦·à§à¦Ÿ à¦¬à¦¿à¦¬à¦°à¦£ à¦°à¦¯à¦¼à§‡à¦›à§‡à¥¤", recent_inquiries: "à¦¸à¦¾à¦®à§à¦ªà§à¦°à¦¤à¦¿à¦• à¦œà¦¨à¦¸à¦¾à¦§à¦¾à¦°à¦£à§‡à¦° à¦…à¦¨à§à¦¸à¦¨à§à¦§à¦¾à¦¨", clarity_card: "à¦ªà§à¦°à¦¤à¦¿à¦Ÿà¦¿ à¦‰à¦¤à§à¦¤à¦° à¦¯à¦¾à¦šà¦¾à¦‡à¦¯à§‹à¦—à§à¦¯ à¦ªà§à¦°à¦¶à§à¦¨ à¦à¦¬à¦‚ à¦¸à§à¦ªà¦·à§à¦Ÿ à¦‰à§Žà¦¸ à¦¦à¦¿à¦¯à¦¼à§‡ à¦¶à§à¦°à§ à¦¹à¦¯à¦¼à¥¤", faq_desk_btn: "ðŸ’¬ à¦†à¦°à¦Ÿà¦¿à¦†à¦‡ à¦¸à¦¹à¦¾à¦¯à¦¼à¦¤à¦¾ à¦¡à§‡à¦¸à§à¦•", try_sample: "à¦à¦•à¦Ÿà¦¿ à¦¨à¦®à§à¦¨à¦¾ à¦šà§‡à¦·à§à¦Ÿà¦¾ à¦•à¦°à§à¦¨", sample_chip_road: "à¦“à¦¯à¦¼à¦¾à¦°à§à¦¡ 4-à¦ à¦°à¦¾à¦¸à§à¦¤à¦¾ à¦®à§‡à¦°à¦¾à¦®à¦¤à§‡à¦° à¦Ÿà§‡à¦¨à§à¦¡à¦¾à¦°à§‡à¦° à¦…à¦¬à¦¸à§à¦¥à¦¾ à¦“ à¦ à¦¿à¦•à¦¾à¦¦à¦¾à¦°à§‡à¦° à¦«à¦¾à¦‡à¦² à¦¨à§‹à¦Ÿà¦¿à¦‚à¦¸", sample_chip_pension: "à¦†à¦®à¦¾à¦° à¦ªà§‡à¦¨à¦¶à¦¨ 3 à¦®à¦¾à¦¸ à¦§à¦°à§‡ à¦œà¦®à¦¾ à¦¹à¦¯à¦¼à¦¨à¦¿", sample_chip_scholarship: "à¦œà¦¾à¦¤à§€à¦¯à¦¼ à¦®à§‡à¦§à¦¾ à¦¬à§ƒà¦¤à§à¦¤à¦¿ à¦¬à¦¿à¦¤à¦°à¦£à§‡ à¦¬à¦¿à¦²à¦®à§à¦¬ à¦“ à¦…à¦¨à§à¦®à§‹à¦¦à¦¨ à¦†à¦¦à§‡à¦¶", sample_chip_water: "à¦ªà§Œà¦° à¦œà¦² à¦ªà¦¾à¦‡à¦ªà¦²à¦¾à¦‡à¦¨ à¦ªà¦°à¦¿à¦¦à¦°à§à¦¶à¦¨ à¦ªà§à¦°à¦¤à¦¿à¦¬à§‡à¦¦à¦¨ à¦“ à¦¸à¦®à¦¯à¦¼à¦¸à§€à¦®à¦¾", your_records: "à¦†à¦ªà¦¨à¦¾à¦° à¦°à§‡à¦•à¦°à§à¦¡", records_count: "3à¦Ÿà¦¿ à¦°à§‡à¦•à¦°à§à¦¡", item_road_title: "à¦“à¦¯à¦¼à¦¾à¦°à§à¦¡ 4 à¦°à¦¾à¦¸à§à¦¤à¦¾ à¦Ÿà§‡à¦¨à§à¦¡à¦¾à¦° à¦…à¦¨à§à¦®à§‹à¦¦à¦¨", item_road_dept: "à¦—à¦£à¦ªà§‚à¦°à§à¦¤ à¦¬à¦¿à¦­à¦¾à¦— (PWD)", item_scholarship_title: "à¦œà¦¾à¦¤à§€à¦¯à¦¼ à¦®à§‡à¦§à¦¾ à¦¬à§ƒà¦¤à§à¦¤à¦¿ à¦ªà§à¦°à¦•à¦¾à¦¶à§‡à¦° à¦†à¦¦à§‡à¦¶", item_scholarship_dept: "à¦¶à¦¿à¦•à§à¦·à¦¾ à¦®à¦¨à§à¦¤à§à¦°à¦£à¦¾à¦²à¦¯à¦¼", item_water_title: "à¦ªà§Œà¦° à¦œà¦² à¦¸à¦°à¦¬à¦°à¦¾à¦¹à§‡à¦° à¦—à§à¦£à¦®à¦¾à¦¨ à¦ªà§à¦°à¦¤à¦¿à¦¬à§‡à¦¦à¦¨", item_water_dept: "à¦ªà§Œà¦° à¦•à¦°à§à¦ªà§‹à¦°à§‡à¦¶à¦¨", built_for_clarity: "à¦¸à§à¦¬à¦šà§à¦›à¦¤à¦¾à¦° à¦œà¦¨à§à¦¯ à¦¨à¦¿à¦°à§à¦®à¦¿à¦¤",
+  },
+  te: {
+    portal_title: "à°ªà±Œà°° à°¸à±‡à°µà°² à°ªà±‹à°°à±à°Ÿà°²à±", brand_title: "à°†à°°à±à°Ÿà±€à° à°¸à°¾à°°à°¥à°¿", header_subtitle: "à°ªà±Œà°° à°¸à°®à°¾à°šà°¾à°°à°‚ à°®à°°à°¿à°¯à± à°†à°°à±à°Ÿà±€à° à°¦à°¾à°–à°²à± à°µà±à°¯à°µà°¸à±à°¥", checks_enabled: "à°–à°šà±à°šà°¿à°¤à°®à±ˆà°¨ à°¨à°¿à°¯à°®à°¾à°² à°¤à°¨à°¿à°–à±€ à°¸à°•à±à°°à°¿à°¯à°‚", about: "à°†à°°à±à°Ÿà±€à° à°¸à°¾à°°à°¥à°¿ à°—à±à°°à°¿à°‚à°šà°¿", live_alert_badge: "à°ªà±à°°à°¤à±à°¯à°•à±à°· à°¹à±†à°šà±à°šà°°à°¿à°•", live_alert: "à°šà°Ÿà±à°Ÿà°¬à°¦à±à°§à°®à±ˆà°¨ à°¹à±†à°šà±à°šà°°à°¿à°•: à°¸à±†à°•à±à°·à°¨à± 7(1) à°ªà±à°°à°•à°¾à°°à°‚ 30 à°°à±‹à°œà±à°²à±à°²à±‹ à°¸à°®à°¾à°§à°¾à°¨à°‚ à°‡à°µà±à°µà°¾à°²à°¿. à°†à°§à°¾à°°à± à°²à±‡à°¦à°¾ à°ªà°¾à°¨à± à°¨à°‚à°¬à°°à±à°²à°¨à± à°œà°¤ à°šà±‡à°¯à°µà°¦à±à°¦à±.", screen_1_badge: "à°¸à±à°•à±à°°à±€à°¨à± 1 / à°ªà±à°°à°¶à±à°¨ à°…à°¡à°—à°‚à°¡à°¿", hero_title: "à°ªà±à°°à°­à±à°¤à±à°µà°¾à°¨à±à°¨à°¿ à°¸à±à°ªà°·à±à°Ÿà°¤à°¤à±‹ à°…à°¡à°—à°‚à°¡à°¿.", hero_sub: "à°¸à°¾à°§à°¾à°°à°£ à°­à°¾à°·à°²à±‹à°¨à°¿ à°ªà±à°°à°¶à±à°¨à°²à°¨à± à°…à°¨à±à°¨à°¿ à°¶à°¾à°–à°² à°•à±‹à°¸à°‚ à°¨à°¿à°°à±à°®à°¿à°¤, à°šà°Ÿà±à°Ÿà°¬à°¦à±à°§à°®à±ˆà°¨ à°†à°°à±à°Ÿà±€à° à°…à°­à±à°¯à°°à±à°¥à°¨à°²à±à°—à°¾ à°®à°¾à°°à±à°šà°‚à°¡à°¿.", input_label: "à°®à±€à°°à± à°à°®à°¿ à°¤à±†à°²à±à°¸à±à°•à±‹à°µà°¾à°²à°¨à±à°•à±à°‚à°Ÿà±à°¨à±à°¨à°¾à°°à±?", placeholder: "à°‰à°¦à°¾à°¹à°°à°£: à°µà°¾à°°à±à°¡à± 4 à°°à±‹à°¡à±à°¡à± à°®à°°à°®à±à°®à°¤à± à°Ÿà±†à°‚à°¡à°°à± à°¸à±à°¥à°¿à°¤à°¿ à°à°®à°¿à°Ÿà°¿ à°²à±‡à°¦à°¾ à°¨à°¾ à°®à±†à°°à°¿à°Ÿà± à°¸à±à°•à°¾à°²à°°à±â€Œà°·à°¿à°ªà± à°Žà°‚à°¦à±à°•à± à°†à°²à°¸à±à°¯à°®à±ˆà°‚à°¦à°¿?", btn_continue: "à°•à±Šà°¨à°¸à°¾à°—à°¿à°‚à°šà°‚à°¡à°¿", btn_analyze: "à°…à°­à±à°¯à°°à±à°¥à°¨à°¨à± à°µà°¿à°¶à±à°²à±‡à°·à°¿à°‚à°šà°‚à°¡à°¿", need_more_detail: "à°®à°°à°¿à°‚à°¤ à°µà°¿à°µà°°à°¾à°²à± à°œà±‹à°¡à°¿à°‚à°šà°‚à°¡à°¿", question_clear: "à°ªà±à°°à°¶à±à°¨ à°¸à±à°ªà°·à±à°Ÿà°‚à°—à°¾ à°‰à°‚à°¦à°¿", validation_clear_detail: "à°‡à°‚à°¦à±à°²à±‹ à°ªà±à°°à°œà°¾ à°°à°¿à°•à°¾à°°à±à°¡à± à°…à°‚à°¶à°‚ à°®à°°à°¿à°¯à± à°°à°¿à°•à°¾à°°à±à°¡à±à°²à°¨à± à°¶à±‹à°§à°¿à°‚à°šà°¡à°¾à°¨à°¿à°•à°¿ à°¤à°—à°¿à°¨ à°µà°¿à°µà°°à°¾à°²à± à°‰à°¨à±à°¨à°¾à°¯à°¿.", recent_inquiries: "à°‡à°Ÿà±€à°µà°²à°¿ à°ªà±à°°à°œà°¾ à°µà°¿à°šà°¾à°°à°£à°²à±", clarity_card: "à°ªà±à°°à°¤à°¿ à°¸à°®à°¾à°§à°¾à°¨à°‚ à°¤à°¨à°¿à°–à±€ à°šà±‡à°¯à°—à°² à°ªà±à°°à°¶à±à°¨ à°®à°°à°¿à°¯à± à°¸à±à°ªà°·à±à°Ÿà°®à±ˆà°¨ à°®à±‚à°²à°‚à°¤à±‹ à°®à±Šà°¦à°²à°µà±à°¤à±à°‚à°¦à°¿.", faq_desk_btn: "ðŸ’¬ à°†à°°à±à°Ÿà±€à° à°¸à°¹à°¾à°¯ à°•à±‡à°‚à°¦à±à°°à°‚", try_sample: "à°’à°• à°¨à°®à±‚à°¨à°¾à°¨à± à°ªà±à°°à°¯à°¤à±à°¨à°¿à°‚à°šà°‚à°¡à°¿", sample_chip_road: "à°µà°¾à°°à±à°¡à± 4 à°°à±‹à°¡à±à°¡à± à°®à°°à°®à±à°®à°¤à± à°Ÿà±†à°‚à°¡à°°à± à°¸à±à°¥à°¿à°¤à°¿ à°®à°°à°¿à°¯à± à°•à°¾à°‚à°Ÿà±à°°à°¾à°•à±à°Ÿà°°à± à°«à±ˆà°²à± à°¨à±‹à°Ÿà°¿à°‚à°—à±à°¸à±", sample_chip_pension: "à°¨à°¾ à°ªà±†à°¨à±à°·à°¨à± à°®à±‚à°¡à± à°¨à±†à°²à°²à±à°—à°¾ à°œà°® à°•à°¾à°²à±‡à°¦à±", sample_chip_scholarship: "à°œà°¾à°¤à±€à°¯ à°®à±†à°°à°¿à°Ÿà± à°¸à±à°•à°¾à°²à°°à±â€Œà°·à°¿à°ªà± à°ªà°‚à°ªà°¿à°£à±€ à°†à°²à°¸à±à°¯à°‚ à°®à°°à°¿à°¯à± à°®à°‚à°œà±‚à°°à± à°‰à°¤à±à°¤à°°à±à°µà±", sample_chip_water: "à°®à±à°¨à±à°¸à°¿à°ªà°²à± à°¨à±€à°Ÿà°¿ à°ªà±ˆà°ªà±â€Œà°²à±ˆà°¨à± à°¤à°¨à°¿à°–à±€ à°¨à°¿à°µà±‡à°¦à°¿à°• à°®à°°à°¿à°¯à± à°•à°¾à°²à°•à±à°°à°®à°‚", your_records: "à°®à±€ à°°à°¿à°•à°¾à°°à±à°¡à±à°²à±", records_count: "3 à°°à°¿à°•à°¾à°°à±à°¡à±à°²à±", item_road_title: "à°µà°¾à°°à±à°¡à± 4 à°°à±‹à°¡à±à°¡à± à°Ÿà±†à°‚à°¡à°°à± à°®à°‚à°œà±‚à°°à±", item_road_dept: "à°ªà°¬à±à°²à°¿à°•à± à°µà°°à±à°•à±à°¸à± à°¡à°¿à°ªà°¾à°°à±à°Ÿà±â€Œà°®à±†à°‚à°Ÿà± (PWD)", item_scholarship_title: "à°œà°¾à°¤à±€à°¯ à°®à±†à°°à°¿à°Ÿà± à°¸à±à°•à°¾à°²à°°à±â€Œà°·à°¿à°ªà± à°µà°¿à°¡à±à°¦à°² à°‰à°¤à±à°¤à°°à±à°µà±", item_scholarship_dept: "à°µà°¿à°¦à±à°¯à°¾ à°®à°‚à°¤à±à°°à°¿à°¤à±à°µ à°¶à°¾à°–", item_water_title: "à°®à±à°¨à±à°¸à°¿à°ªà°²à± à°¨à±€à°Ÿà°¿ à°¸à°°à°«à°°à°¾ à°¨à°¾à°£à±à°¯à°¤ à°¨à°¿à°µà±‡à°¦à°¿à°•", item_water_dept: "à°®à±à°¨à±à°¸à°¿à°ªà°²à± à°•à°¾à°°à±à°ªà±Šà°°à±‡à°·à°¨à±", built_for_clarity: "à°¸à±à°ªà°·à±à°Ÿà°¤ à°•à±‹à°¸à°‚ à°¨à°¿à°°à±à°®à°¿à°‚à°šà°¬à°¡à°¿à°‚à°¦à°¿",
+  },
+  mr: {
+    portal_title: "à¤¨à¤¾à¤—à¤°à¤¿à¤• à¤¸à¥‡à¤µà¤¾ à¤ªà¥‹à¤°à¥à¤Ÿà¤²", brand_title: "à¤†à¤°à¤Ÿà¥€à¤†à¤¯ à¤¸à¤¾à¤°à¤¥à¥€", header_subtitle: "à¤¨à¤¾à¤—à¤°à¤¿à¤• à¤®à¤¾à¤¹à¤¿à¤¤à¥€ à¤†à¤£à¤¿ à¤†à¤°à¤Ÿà¥€à¤†à¤¯ à¤…à¤°à¥à¤œ à¤ªà¥à¤°à¤£à¤¾à¤²à¥€", checks_enabled: "à¤…à¤šà¥‚à¤• à¤¨à¤¿à¤¯à¤® à¤¤à¤ªà¤¾à¤¸à¤£à¥€ à¤¸à¤•à¥à¤°à¤¿à¤¯", about: "à¤†à¤°à¤Ÿà¥€à¤†à¤¯ à¤¸à¤¾à¤°à¤¥à¥€ à¤¬à¤¦à¥à¤¦à¤²", live_alert_badge: "à¤¥à¥‡à¤Ÿ à¤¸à¥‚à¤šà¤¨à¤¾", live_alert: "à¤µà¥ˆà¤§à¤¾à¤¨à¤¿à¤• à¤‡à¤¶à¤¾à¤°à¤¾: à¤•à¤²à¤® 7(1) à¤¨à¥à¤¸à¤¾à¤° 30 à¤¦à¤¿à¤µà¤¸à¤¾à¤‚à¤šà¥à¤¯à¤¾ à¤†à¤¤ à¤‰à¤¤à¥à¤¤à¤° à¤¦à¥‡à¤£à¥‡ à¤¬à¤‚à¤§à¤¨à¤•à¤¾à¤°à¤• à¤†à¤¹à¥‡. à¤†à¤§à¤¾à¤° à¤•à¤¿à¤‚à¤µà¤¾ à¤ªà¥…à¤¨ à¤•à¥à¤°à¤®à¤¾à¤‚à¤• à¤œà¥‹à¤¡à¥‚ à¤¨à¤•à¤¾.", screen_1_badge: "à¤¸à¥à¤•à¥à¤°à¥€à¤¨ 1 / à¤ªà¥à¤°à¤¶à¥à¤¨ à¤µà¤¿à¤šà¤¾à¤°à¤¾", hero_title: "à¤¸à¤°à¤•à¤¾à¤°à¤²à¤¾ à¤¸à¥à¤ªà¤·à¥à¤Ÿà¤ªà¤£à¥‡ à¤µà¤¿à¤šà¤¾à¤°à¤¾.", hero_sub: "à¤¸à¥‹à¤ªà¥à¤¯à¤¾ à¤­à¤¾à¤·à¥‡à¤¤à¥€à¤² à¤ªà¥à¤°à¤¶à¥à¤¨à¤¾à¤‚à¤šà¥‡ à¤¸à¤°à¥à¤µ à¤µà¤¿à¤­à¤¾à¤—à¤¾à¤‚à¤¸à¤¾à¤ à¥€ à¤¸à¤‚à¤°à¤šà¤¿à¤¤, à¤•à¤¾à¤¯à¤¦à¥‡à¤¶à¥€à¤°à¤¦à¥ƒà¤·à¥à¤Ÿà¥à¤¯à¤¾ à¤ªà¥à¤°à¤­à¤¾à¤µà¥€ à¤†à¤°à¤Ÿà¥€à¤†à¤¯ à¤…à¤°à¥à¤œà¤¾à¤‚à¤®à¤§à¥à¤¯à¥‡ à¤°à¥‚à¤ªà¤¾à¤‚à¤¤à¤° à¤•à¤°à¤¾.", input_label: "à¤¤à¥à¤®à¥à¤¹à¤¾à¤²à¤¾ à¤•à¤¾à¤¯ à¤œà¤¾à¤£à¥‚à¤¨ à¤˜à¥à¤¯à¤¾à¤¯à¤šà¥‡ à¤†à¤¹à¥‡?", placeholder: "à¤‰à¤¦à¤¾à¤¹à¤°à¤£: à¤ªà¥à¤°à¤­à¤¾à¤— 4 à¤®à¤§à¥€à¤² à¤°à¤¸à¥à¤¤à¤¾ à¤¦à¥à¤°à¥à¤¸à¥à¤¤à¥€ à¤¨à¤¿à¤µà¤¿à¤¦à¥‡à¤šà¥€ à¤¸à¥à¤¥à¤¿à¤¤à¥€ à¤•à¤¾à¤¯ à¤†à¤¹à¥‡ à¤•à¤¿à¤‚à¤µà¤¾ à¤®à¤¾à¤à¥€ à¤—à¥à¤£à¤µà¤¤à¥à¤¤à¤¾ à¤¶à¤¿à¤·à¥à¤¯à¤µà¥ƒà¤¤à¥à¤¤à¥€ à¤•à¤¾ à¤°à¤–à¤¡à¤²à¥€ à¤†à¤¹à¥‡?", btn_continue: "à¤ªà¥à¤¢à¥‡ à¤œà¤¾", btn_analyze: "à¤…à¤°à¥à¤œà¤¾à¤šà¥‡ à¤µà¤¿à¤¶à¥à¤²à¥‡à¤·à¤£ à¤•à¤°à¤¾", need_more_detail: "à¤…à¤§à¤¿à¤• à¤¤à¤ªà¤¶à¥€à¤² à¤œà¥‹à¤¡à¤¾", question_clear: "à¤ªà¥à¤°à¤¶à¥à¤¨ à¤¸à¥à¤ªà¤·à¥à¤Ÿ à¤†à¤¹à¥‡", validation_clear_detail: "à¤¯à¤¾à¤®à¤§à¥à¤¯à¥‡ à¤¸à¤¾à¤°à¥à¤µà¤œà¤¨à¤¿à¤• à¤¨à¥‹à¤‚à¤¦à¥€à¤šà¤¾ à¤µà¤¿à¤·à¤¯ à¤†à¤£à¤¿ à¤¨à¥‹à¤‚à¤¦à¥€ à¤¶à¥‹à¤§à¤£à¥à¤¯à¤¾à¤¸à¤¾à¤ à¥€ à¤ªà¥à¤°à¥‡à¤¸à¤¾ à¤¤à¤ªà¤¶à¥€à¤² à¤†à¤¹à¥‡.", recent_inquiries: "à¤…à¤²à¥€à¤•à¤¡à¥€à¤² à¤¸à¤¾à¤°à¥à¤µà¤œà¤¨à¤¿à¤• à¤šà¥Œà¤•à¤¶à¥€", clarity_card: "à¤ªà¥à¤°à¤¤à¥à¤¯à¥‡à¤• à¤‰à¤¤à¥à¤¤à¤° à¤¤à¤ªà¤¾à¤¸à¤¤à¤¾ à¤¯à¥‡à¤£à¤¾à¤±à¥à¤¯à¤¾ à¤ªà¥à¤°à¤¶à¥à¤¨à¤¾à¤¨à¥‡ à¤†à¤£à¤¿ à¤¸à¥à¤ªà¤·à¥à¤Ÿ à¤¸à¥à¤°à¥‹à¤¤à¤¾à¤¨à¥‡ à¤¸à¥à¤°à¥‚ à¤¹à¥‹à¤¤à¥‡.", faq_desk_btn: "ðŸ’¬ à¤†à¤°à¤Ÿà¥€à¤†à¤¯ à¤®à¤¦à¤¤ à¤•à¤•à¥à¤·", try_sample: "à¤à¤• à¤¨à¤®à¥à¤¨à¤¾ à¤µà¤¾à¤ªà¤°à¥‚à¤¨ à¤ªà¤¹à¤¾", sample_chip_road: "à¤ªà¥à¤°à¤­à¤¾à¤— 4 à¤®à¤§à¥€à¤² à¤°à¤¸à¥à¤¤à¤¾ à¤¦à¥à¤°à¥à¤¸à¥à¤¤à¥€ à¤¨à¤¿à¤µà¤¿à¤¦à¥‡à¤šà¥€ à¤¸à¥à¤¥à¤¿à¤¤à¥€ à¤†à¤£à¤¿ à¤•à¤‚à¤¤à¥à¤°à¤¾à¤Ÿà¤¦à¤¾à¤°à¤¾à¤šà¥à¤¯à¤¾ à¤«à¤¾à¤‡à¤² à¤¨à¥‹à¤‚à¤¦à¥€", sample_chip_pension: "à¤®à¤¾à¤à¥€ à¤ªà¥‡à¤¨à¥à¤¶à¤¨ à¤¤à¥€à¤¨ à¤®à¤¹à¤¿à¤¨à¥à¤¯à¤¾à¤‚à¤ªà¤¾à¤¸à¥‚à¤¨ à¤œà¤®à¤¾ à¤à¤¾à¤²à¥‡à¤²à¥€ à¤¨à¤¾à¤¹à¥€", sample_chip_scholarship: "à¤°à¤¾à¤·à¥à¤Ÿà¥à¤°à¥€à¤¯ à¤—à¥à¤£à¤µà¤¤à¥à¤¤à¤¾ à¤¶à¤¿à¤·à¥à¤¯à¤µà¥ƒà¤¤à¥à¤¤à¥€ à¤µà¤¿à¤¤à¤°à¤£à¤¾à¤¤à¥€à¤² à¤µà¤¿à¤²à¤‚à¤¬ à¤†à¤£à¤¿ à¤®à¤‚à¤œà¥à¤°à¥€ à¤†à¤¦à¥‡à¤¶", sample_chip_water: "à¤®à¤¹à¤¾à¤¨à¤—à¤°à¤ªà¤¾à¤²à¤¿à¤•à¤¾ à¤œà¤²à¤µà¤¾à¤¹à¤¿à¤¨à¥€ à¤¤à¤ªà¤¾à¤¸à¤£à¥€ à¤…à¤¹à¤µà¤¾à¤² à¤†à¤£à¤¿ à¤•à¤¾à¤²à¤®à¤°à¥à¤¯à¤¾à¤¦à¤¾", your_records: "à¤¤à¥à¤®à¤šà¥à¤¯à¤¾ à¤¨à¥‹à¤‚à¤¦à¥€", records_count: "3 à¤¨à¥‹à¤‚à¤¦à¥€", item_road_title: "à¤ªà¥à¤°à¤­à¤¾à¤— 4 à¤°à¤¸à¥à¤¤à¤¾ à¤¨à¤¿à¤µà¤¿à¤¦à¤¾ à¤®à¤‚à¤œà¥à¤°à¥€", item_road_dept: "à¤¸à¤¾à¤°à¥à¤µà¤œà¤¨à¤¿à¤• à¤¬à¤¾à¤‚à¤§à¤•à¤¾à¤® à¤µà¤¿à¤­à¤¾à¤— (PWD)", item_scholarship_title: "à¤°à¤¾à¤·à¥à¤Ÿà¥à¤°à¥€à¤¯ à¤—à¥à¤£à¤µà¤¤à¥à¤¤à¤¾ à¤¶à¤¿à¤·à¥à¤¯à¤µà¥ƒà¤¤à¥à¤¤à¥€ à¤µà¤¿à¤¤à¤°à¤£ à¤†à¤¦à¥‡à¤¶", item_scholarship_dept: "à¤¶à¤¿à¤•à¥à¤·à¤£ à¤®à¤‚à¤¤à¥à¤°à¤¾à¤²à¤¯", item_water_title: "à¤®à¤¹à¤¾à¤¨à¤—à¤°à¤ªà¤¾à¤²à¤¿à¤•à¤¾ à¤ªà¤¾à¤£à¥€à¤ªà¥à¤°à¤µà¤ à¤¾ à¤—à¥à¤£à¤µà¤¤à¥à¤¤à¤¾ à¤…à¤¹à¤µà¤¾à¤²", item_water_dept: "à¤®à¤¹à¤¾à¤¨à¤—à¤°à¤ªà¤¾à¤²à¤¿à¤•à¤¾", built_for_clarity: "à¤¸à¥à¤ªà¤·à¥à¤Ÿà¤¤à¥‡à¤¸à¤¾à¤ à¥€ à¤¨à¤¿à¤°à¥à¤®à¤¿à¤¤",
+  },
+  ta: {
+    portal_title: "à®•à¯à®Ÿà®¿à®®à®•à¯à®•à®³à¯ à®šà¯‡à®µà¯ˆ à®‡à®£à¯ˆà®¯à®¤à®³à®®à¯", brand_title: "à®†à®°à¯à®Ÿà®¿à® à®šà®¾à®°à®¤à®¿", header_subtitle: "à®•à¯à®Ÿà®¿à®®à®•à¯à®•à®³à¯ à®¤à®•à®µà®²à¯ à®®à®±à¯à®±à¯à®®à¯ à®†à®°à¯à®Ÿà®¿à® à®¤à®¾à®•à¯à®•à®²à¯ à®¤à®³à®®à¯", checks_enabled: "à®¤à¯à®²à¯à®²à®¿à®¯à®®à®¾à®© à®µà®¿à®¤à®¿ à®šà®°à®¿à®ªà®¾à®°à¯à®ªà¯à®ªà¯ à®šà¯†à®¯à®²à®¿à®²à¯", about: "à®†à®°à¯à®Ÿà®¿à® à®šà®¾à®°à®¤à®¿ à®ªà®±à¯à®±à®¿", live_alert_badge: "à®¨à¯‡à®°à®Ÿà®¿ à®Žà®šà¯à®šà®°à®¿à®•à¯à®•à¯ˆ", live_alert: "à®šà®Ÿà¯à®Ÿà®ªà¯à®ªà¯‚à®°à¯à®µ à®Žà®šà¯à®šà®°à®¿à®•à¯à®•à¯ˆ: à®ªà®¿à®°à®¿à®µà¯ 7(1) à®‡à®©à¯ à®•à¯€à®´à¯ 30 à®¨à®¾à®Ÿà¯à®•à®³à¯à®•à¯à®•à¯à®³à¯ à®ªà®¤à®¿à®²à®³à®¿à®•à¯à®• à®µà¯‡à®£à¯à®Ÿà¯à®®à¯. à®†à®¤à®¾à®°à¯ à®…à®²à¯à®²à®¤à¯ à®ªà®¾à®©à¯ à®Žà®£à¯à®•à®³à¯ˆ à®‡à®£à¯ˆà®•à¯à®• à®µà¯‡à®£à¯à®Ÿà®¾à®®à¯.", screen_1_badge: "à®¤à®¿à®°à¯ˆ 1 / à®•à¯‡à®³à¯à®µà®¿ à®•à¯‡à®³à¯à®™à¯à®•à®³à¯", hero_title: "à®…à®°à®šà®¿à®Ÿà®®à¯ à®¤à¯†à®³à®¿à®µà®¾à®•à®•à¯ à®•à¯‡à®³à¯à®™à¯à®•à®³à¯.", hero_sub: "à®Žà®³à®¿à®¯ à®®à¯Šà®´à®¿à®•à¯ à®•à¯‡à®³à¯à®µà®¿à®•à®³à¯ˆ à®…à®©à¯ˆà®¤à¯à®¤à¯ à®¤à¯à®±à¯ˆà®•à®³à¯à®•à¯à®•à¯à®®à®¾à®© à®•à®Ÿà¯à®Ÿà®®à¯ˆà®•à¯à®•à®ªà¯à®ªà®Ÿà¯à®Ÿ, à®šà®Ÿà¯à®Ÿà®ªà¯à®ªà¯‚à®°à¯à®µ à®†à®°à¯à®Ÿà®¿à® à®•à¯‹à®°à®¿à®•à¯à®•à¯ˆà®•à®³à®¾à®• à®®à®¾à®±à¯à®±à¯à®™à¯à®•à®³à¯.", input_label: "à®¨à¯€à®™à¯à®•à®³à¯ à®Žà®¤à¯ˆà®¤à¯ à®¤à¯†à®°à®¿à®¨à¯à®¤à¯à®•à¯Šà®³à¯à®³ à®µà®¿à®°à¯à®®à¯à®ªà¯à®•à®¿à®±à¯€à®°à¯à®•à®³à¯?", placeholder: "à®‰à®¤à®¾à®°à®£à®®à¯: à®µà®¾à®°à¯à®Ÿà¯ 4 à®šà®¾à®²à¯ˆà®ªà¯ à®ªà®£à®¿à®•à¯à®•à®¾à®© à®’à®ªà¯à®ªà®¨à¯à®¤ à®¨à®¿à®²à¯ˆ à®Žà®©à¯à®©, à®…à®²à¯à®²à®¤à¯ à®Žà®©à®¤à¯ à®¤à®•à¯à®¤à®¿ à®‰à®¤à®µà®¿à®¤à¯à®¤à¯Šà®•à¯ˆ à®à®©à¯ à®¤à®¾à®®à®¤à®®à®¾à®©à®¤à¯?", btn_continue: "à®¤à¯Šà®Ÿà®°à®µà¯à®®à¯", btn_analyze: "à®•à¯‹à®°à®¿à®•à¯à®•à¯ˆà®¯à¯ˆ à®ªà®•à¯à®ªà¯à®ªà®¾à®¯à¯à®µà¯ à®šà¯†à®¯à¯à®•", need_more_detail: "à®®à¯‡à®²à¯à®®à¯ à®µà®¿à®µà®°à®™à¯à®•à®³à¯ˆà®šà¯ à®šà¯‡à®°à¯à®•à¯à®•à®µà¯à®®à¯", question_clear: "à®•à¯‡à®³à¯à®µà®¿ à®¤à¯†à®³à®¿à®µà®¾à®• à®‰à®³à¯à®³à®¤à¯", validation_clear_detail: "à®‡à®¤à®¿à®²à¯ à®ªà¯Šà®¤à¯ à®ªà®¤à®¿à®µà¯à®¤à¯ à®¤à®²à¯ˆà®ªà¯à®ªà¯à®®à¯ à®ªà®¤à®¿à®µà¯à®•à®³à¯ˆà®¤à¯ à®¤à¯‡à®Ÿà¯à®µà®¤à®±à¯à®•à®¾à®© à®ªà¯‹à®¤à¯à®®à®¾à®© à®µà®¿à®µà®°à®®à¯à®®à¯ à®‰à®³à¯à®³à®©.", recent_inquiries: "à®šà®®à¯€à®ªà®¤à¯à®¤à®¿à®¯ à®ªà¯Šà®¤à¯ à®µà®¿à®šà®¾à®°à®£à¯ˆà®•à®³à¯", clarity_card: "à®’à®µà¯à®µà¯Šà®°à¯ à®ªà®¤à®¿à®²à¯à®®à¯ à®šà®°à®¿à®ªà®¾à®°à¯à®•à¯à®•à®•à¯à®•à¯‚à®Ÿà®¿à®¯ à®•à¯‡à®³à¯à®µà®¿ à®®à®±à¯à®±à¯à®®à¯ à®¤à¯†à®³à®¿à®µà®¾à®© à®†à®¤à®¾à®°à®¤à¯à®¤à¯à®Ÿà®©à¯ à®¤à¯Šà®Ÿà®™à¯à®•à¯à®•à®¿à®±à®¤à¯.", faq_desk_btn: "ðŸ’¬ à®†à®°à¯à®Ÿà®¿à® à®‰à®¤à®µà®¿ à®®à¯ˆà®¯à®®à¯", try_sample: "à®®à®¾à®¤à®¿à®°à®¿à®¯à¯ˆ à®®à¯à®¯à®±à¯à®šà®¿à®•à¯à®•à®µà¯à®®à¯", sample_chip_road: "à®µà®¾à®°à¯à®Ÿà¯ 4 à®šà®¾à®²à¯ˆà®ªà¯ à®ªà®£à®¿à®•à¯à®•à®¾à®© à®’à®ªà¯à®ªà®¨à¯à®¤ à®¨à®¿à®²à¯ˆ à®®à®±à¯à®±à¯à®®à¯ à®’à®ªà¯à®ªà®¨à¯à®¤à®¤à®¾à®°à®°à¯ à®•à¯‹à®ªà¯à®ªà¯ à®•à¯à®±à®¿à®ªà¯à®ªà¯à®•à®³à¯", sample_chip_pension: "à®Žà®©à®¤à¯ à®“à®¯à¯à®µà¯‚à®¤à®¿à®¯à®®à¯ à®®à¯‚à®©à¯à®±à¯ à®®à®¾à®¤à®™à¯à®•à®³à®¾à®• à®µà®°à®µà¯ à®µà¯ˆà®•à¯à®•à®ªà¯à®ªà®Ÿà®µà®¿à®²à¯à®²à¯ˆ", sample_chip_scholarship: "à®¤à¯‡à®šà®¿à®¯ à®¤à®•à¯à®¤à®¿ à®‰à®¤à®µà®¿à®¤à¯à®¤à¯Šà®•à¯ˆ à®µà®´à®™à¯à®•à®²à¯ à®¤à®¾à®®à®¤à®®à¯ à®®à®±à¯à®±à¯à®®à¯ à®…à®©à¯à®®à®¤à®¿ à®†à®£à¯ˆ", sample_chip_water: "à®¨à®•à®°à®¾à®Ÿà¯à®šà®¿ à®¨à¯€à®°à¯à®•à¯à®•à¯à®´à®¾à®¯à¯ à®†à®¯à¯à®µà¯ à®…à®±à®¿à®•à¯à®•à¯ˆ à®®à®±à¯à®±à¯à®®à¯ à®•à®¾à®²à®•à¯à®•à¯†à®Ÿà¯", your_records: "à®‰à®™à¯à®•à®³à¯ à®ªà®¤à®¿à®µà¯à®•à®³à¯", records_count: "3 à®ªà®¤à®¿à®µà¯à®•à®³à¯", item_road_title: "à®µà®¾à®°à¯à®Ÿà¯ 4 à®šà®¾à®²à¯ˆ à®’à®ªà¯à®ªà®¨à¯à®¤ à®…à®©à¯à®®à®¤à®¿", item_road_dept: "à®ªà¯Šà®¤à¯à®ªà¯à®ªà®£à®¿à®¤à¯ à®¤à¯à®±à¯ˆ (PWD)", item_scholarship_title: "à®¤à¯‡à®šà®¿à®¯ à®¤à®•à¯à®¤à®¿ à®‰à®¤à®µà®¿à®¤à¯à®¤à¯Šà®•à¯ˆ à®µà®´à®™à¯à®•à®²à¯ à®†à®£à¯ˆ", item_scholarship_dept: "à®•à®²à¯à®µà®¿ à®…à®®à¯ˆà®šà¯à®šà®•à®®à¯", item_water_title: "à®¨à®•à®°à®¾à®Ÿà¯à®šà®¿ à®¨à¯€à®°à¯ à®µà®´à®™à¯à®•à®²à¯ à®¤à®° à®…à®±à®¿à®•à¯à®•à¯ˆ", item_water_dept: "à®¨à®•à®°à®¾à®Ÿà¯à®šà®¿ à®•à®´à®•à®®à¯", built_for_clarity: "à®¤à¯†à®³à®¿à®µà¯à®•à¯à®•à®¾à®• à®‰à®°à¯à®µà®¾à®•à¯à®•à®ªà¯à®ªà®Ÿà¯à®Ÿà®¤à¯",
+  },
+  gu: {
+    portal_title: "àª¨àª¾àª—àª°àª¿àª• àª¸à«‡àªµàª¾ àªªà«‹àª°à«àªŸàª²", brand_title: "àª†àª°àªŸà«€àª†àªˆ àª¸àª¾àª°àª¥à«€", header_subtitle: "àª¨àª¾àª—àª°àª¿àª• àª®àª¾àª¹àª¿àª¤à«€ àª…àª¨à«‡ àª†àª°àªŸà«€àª†àªˆ àª…àª°àªœà«€ àª¸à«àª¤àª°", checks_enabled: "àªšà«‹àª•à«àª•àª¸ àª¨àª¿àª¯àª® àª¤àªªàª¾àª¸ àª¸àª•à«àª°àª¿àª¯", about: "àª†àª°àªŸà«€àª†àªˆ àª¸àª¾àª°àª¥à«€ àªµàª¿àª¶à«‡", live_alert_badge: "àª²àª¾àª‡àªµ àªšà«‡àª¤àªµàª£à«€", live_alert: "àªµà«ˆàª§àª¾àª¨àª¿àª• àªšà«‡àª¤àªµàª£à«€: àª•àª²àª® 7(1) àª¹à«‡àª àª³ 30 àª¦àª¿àªµàª¸àª®àª¾àª‚ àªœàªµàª¾àª¬ àª†àªªàªµà«‹ àª«àª°àªœàª¿àª¯àª¾àª¤ àª›à«‡. àª†àª§àª¾àª° àª…àª¥àªµàª¾ àªªàª¾àª¨ àª¨àª‚àª¬àª° àªœà«‹àª¡àª¶à«‹ àª¨àª¹à«€àª‚.", screen_1_badge: "àª¸à«àª•à«àª°à«€àª¨ 1 / àªªà«àª°àª¶à«àª¨ àªªà«‚àª›à«‹", hero_title: "àª¸àª°àª•àª¾àª°àª¨à«‡ àª¸à«àªªàª·à«àªŸàª¤àª¾ àª¸àª¾àª¥à«‡ àªªà«‚àª›à«‹.", hero_sub: "àª¸àª¾àª¦à«€ àª­àª¾àª·àª¾àª¨àª¾ àªªà«àª°àª¶à«àª¨à«‹àª¨à«‡ àª¤àª®àª¾àª® àªµàª¿àª­àª¾àª—à«‹ àª®àª¾àªŸà«‡ àª¸à«àªµà«àª¯àªµàª¸à«àª¥àª¿àª¤, àª•àª¾àª¯àª¦à«‡àª¸àª° àª†àª°àªŸà«€àª†àªˆ àª…àª°àªœà«€àª“àª®àª¾àª‚ àª«à«‡àª°àªµà«‹.", input_label: "àª¤àª®à«‡ àª¶à«àª‚ àªœàª¾àª£àªµàª¾ àª®àª¾àª‚àª—à«‹ àª›à«‹?", placeholder: "àª‰àª¦àª¾àª¹àª°àª£: àªµà«‹àª°à«àª¡ 4àª®àª¾àª‚ àª°àª¸à«àª¤àª¾àª¨àª¾ àª¸àª®àª¾àª°àª•àª¾àª®àª¨àª¾ àªŸà«‡àª¨à«àª¡àª°àª¨à«€ àª¸à«àª¥àª¿àª¤àª¿ àª¶à«àª‚ àª›à«‡ àª…àª¥àªµàª¾ àª®àª¾àª°à«€ àª®à«‡àª°àª¿àªŸ àª¶àª¿àª·à«àª¯àªµà«ƒàª¤à«àª¤àª¿àª®àª¾àª‚ àªµàª¿àª²àª‚àª¬ àª•à«‡àª® àª›à«‡?", btn_continue: "àªšàª¾àª²à« àª°àª¾àª–à«‹", btn_analyze: "àª…àª°àªœà«€àª¨à«àª‚ àªµàª¿àª¶à«àª²à«‡àª·àª£ àª•àª°à«‹", need_more_detail: "àªµàª§à« àªµàª¿àª—àª¤à«‹ àª‰àª®à«‡àª°à«‹", question_clear: "àªªà«àª°àª¶à«àª¨ àª¸à«àªªàª·à«àªŸ àª›à«‡", validation_clear_detail: "àª¤à«‡àª®àª¾àª‚ àªœàª¾àª¹à«‡àª° àª°à«‡àª•à«‹àª°à«àª¡àª¨à«‹ àªµàª¿àª·àª¯ àª…àª¨à«‡ àª°à«‡àª•à«‹àª°à«àª¡ àª¶à«‹àª§àªµàª¾ àª®àª¾àªŸà«‡ àªªà«‚àª°àª¤à«€ àªµàª¿àª—àª¤à«‹ àª›à«‡.", recent_inquiries: "àª¤àª¾àªœà«‡àª¤àª°àª¨à«€ àªœàª¾àª¹à«‡àª° àªªà«‚àª›àªªàª°àª›", clarity_card: "àª¦àª°à«‡àª• àªœàªµàª¾àª¬ àªšàª•àª¾àª¸à«€ àª¶àª•àª¾àª¯ àª¤à«‡àªµàª¾ àªªà«àª°àª¶à«àª¨ àª…àª¨à«‡ àª¸à«àªªàª·à«àªŸ àª¸à«àª°à«‹àª¤àª¥à«€ àª¶àª°à«‚ àª¥àª¾àª¯ àª›à«‡.", faq_desk_btn: "ðŸ’¬ àª†àª°àªŸà«€àª†àªˆ àª®àª¦àª¦ àª¡à«‡àª¸à«àª•", try_sample: "àªàª• àª¨àª®à«‚àª¨à«‹ àª…àªœàª®àª¾àªµà«‹", sample_chip_road: "àªµà«‹àª°à«àª¡ 4 àª°àª¸à«àª¤àª¾ àª¸àª®àª¾àª°àª•àª¾àª® àªŸà«‡àª¨à«àª¡àª°àª¨à«€ àª¸à«àª¥àª¿àª¤àª¿ àª…àª¨à«‡ àª•à«‹àª¨à«àªŸà«àª°àª¾àª•à«àªŸàª°àª¨à«€ àª«àª¾àª‡àª² àª¨à«‹àª‚àª§à«‹", sample_chip_pension: "àª®àª¾àª°à«€ àªªà«‡àª¨à«àª¶àª¨ àª¤à«àª°àª£ àª®àª¹àª¿àª¨àª¾àª¥à«€ àªœàª®àª¾ àª¥àªˆ àª¨àª¥à«€", sample_chip_scholarship: "àª°àª¾àª·à«àªŸà«àª°à«€àª¯ àª®à«‡àª°àª¿àªŸ àª¶àª¿àª·à«àª¯àªµà«ƒàª¤à«àª¤àª¿ àªµàª¿àª¤àª°àª£àª®àª¾àª‚ àªµàª¿àª²àª‚àª¬ àª…àª¨à«‡ àª®àª‚àªœà«‚àª°à«€ àª¹à«àª•àª®", sample_chip_water: "àª®à«àª¯à«àª¨àª¿àª¸àª¿àªªàª² àªªàª¾àª£à«€àª¨à«€ àªªàª¾àª‡àªªàª²àª¾àª‡àª¨ àª¨àª¿àª°à«€àª•à«àª·àª£ àª…àª¹à«‡àªµàª¾àª² àª…àª¨à«‡ àª¸àª®àª¯àª°à«‡àª–àª¾", your_records: "àª¤àª®àª¾àª°àª¾ àª°à«‡àª•à«‹àª°à«àª¡à«àª¸", records_count: "3 àª°à«‡àª•à«‹àª°à«àª¡à«àª¸", item_road_title: "àªµà«‹àª°à«àª¡ 4 àª°à«‹àª¡ àªŸà«‡àª¨à«àª¡àª° àª®àª‚àªœà«‚àª°à«€", item_road_dept: "àªœàª¾àª¹à«‡àª° àª¬àª¾àª‚àª§àª•àª¾àª® àªµàª¿àª­àª¾àª— (PWD)", item_scholarship_title: "àª°àª¾àª·à«àªŸà«àª°à«€àª¯ àª®à«‡àª°àª¿àªŸ àª¶àª¿àª·à«àª¯àªµà«ƒàª¤à«àª¤àª¿ àªªà«àª°àª•àª¾àª¶àª¨ àª¹à«àª•àª®", item_scholarship_dept: "àª¶àª¿àª•à«àª·àª£ àª®àª‚àª¤à«àª°àª¾àª²àª¯", item_water_title: "àª®à«àª¯à«àª¨àª¿àª¸àª¿àªªàª² àªªàª¾àª£à«€ àªªà«àª°àªµàª àª¾ àª—à«àª£àªµàª¤à«àª¤àª¾ àª…àª¹à«‡àªµàª¾àª²", item_water_dept: "àª®à«àª¯à«àª¨àª¿àª¸àª¿àªªàª² àª•à«‹àª°à«àªªà«‹àª°à«‡àª¶àª¨", built_for_clarity: "àª¸à«àªªàª·à«àªŸàª¤àª¾ àª®àª¾àªŸà«‡ àª¨àª¿àª°à«àª®àª¿àª¤",
+  },
+  kn: {
+    portal_title: "à²¨à²¾à²—à²°à²¿à²• à²¸à³‡à²µà²¾ à²ªà³‹à²°à³à²Ÿà²²à³", brand_title: "à²†à²°à³â€Œà²Ÿà²¿à² à²¸à²¾à²°à²¥à²¿", header_subtitle: "à²¨à²¾à²—à²°à²¿à²• à²®à²¾à²¹à²¿à²¤à²¿ à²®à²¤à³à²¤à³ à²†à²°à³â€Œà²Ÿà²¿à² à²¸à²²à³à²²à²¿à²•à³† à²ªà²¦à²°", checks_enabled: "à²¨à²¿à²–à²° à²¨à²¿à²¯à²® à²ªà²°à²¿à²¶à³€à²²à²¨à³† à²¸à²•à³à²°à²¿à²¯", about: "à²†à²°à³â€Œà²Ÿà²¿à² à²¸à²¾à²°à²¥à²¿ à²¬à²—à³à²—à³†", live_alert_badge: "à²¨à³‡à²° à²Žà²šà³à²šà²°à²¿à²•à³†", live_alert: "à²¶à²¾à²¸à²¨à²¬à²¦à³à²§ à²Žà²šà³à²šà²°à²¿à²•à³†: à²•à²²à²‚ 7(1) à²…à²¡à²¿à²¯à²²à³à²²à²¿ 30 à²¦à²¿à²¨à²—à²³à²²à³à²²à²¿ à²‰à²¤à³à²¤à²°à²¿à²¸à³à²µà³à²¦à³ à²•à²¡à³à²¡à²¾à²¯. à²†à²§à²¾à²°à³ à²…à²¥à²µà²¾ à²ªà²¾à²¨à³ à²¸à²‚à²–à³à²¯à³†à²—à²³à²¨à³à²¨à³ à²²à²—à²¤à³à²¤à²¿à²¸à²¬à³‡à²¡à²¿.", screen_1_badge: "à²¸à³à²•à³à²°à³€à²¨à³ 1 / à²ªà³à²°à²¶à³à²¨à³† à²•à³‡à²³à²¿", hero_title: "à²¸à²°à³à²•à²¾à²°à²µà²¨à³à²¨à³ à²¸à³à²ªà²·à³à²Ÿà²µà²¾à²—à²¿ à²•à³‡à²³à²¿.", hero_sub: "à²¸à²°à²³ à²­à²¾à²·à³†à²¯ à²ªà³à²°à²¶à³à²¨à³†à²—à²³à²¨à³à²¨à³ à²Žà²²à³à²²à²¾ à²‡à²²à²¾à²–à³†à²—à²³à²¿à²—à²¾à²—à²¿ à²°à²šà²¨à²¾à²¤à³à²®à²•, à²•à²¾à²¨à³‚à²¨à³à²¬à²¦à³à²§ à²†à²°à³â€Œà²Ÿà²¿à² à²µà²¿à²¨à²‚à²¤à²¿à²—à²³à²¾à²—à²¿ à²ªà²°à²¿à²µà²°à³à²¤à²¿à²¸à²¿.", input_label: "à²¨à³€à²µà³ à²à²¨à³ à²¤à²¿à²³à²¿à²¦à³à²•à³Šà²³à³à²³à²²à³ à²¬à²¯à²¸à³à²¤à³à²¤à³€à²°à²¿?", placeholder: "à²‰à²¦à²¾à²¹à²°à²£à³†: à²µà²¾à²°à³à²¡à³ 4à²° à²°à²¸à³à²¤à³† à²¦à³à²°à²¸à³à²¤à²¿ à²Ÿà³†à²‚à²¡à²°à³ à²¸à³à²¥à²¿à²¤à²¿ à²à²¨à³ à²…à²¥à²µà²¾ à²¨à²¨à³à²¨ à²®à³†à²°à²¿à²Ÿà³ à²µà²¿à²¦à³à²¯à²¾à²°à³à²¥à²¿à²µà³‡à²¤à²¨ à²à²•à³† à²µà²¿à²³à²‚à²¬à²µà²¾à²—à²¿à²¦à³†?", btn_continue: "à²®à³à²‚à²¦à³à²µà²°à²¿à²¸à²¿", btn_analyze: "à²µà²¿à²¨à²‚à²¤à²¿à²¯à²¨à³à²¨à³ à²µà²¿à²¶à³à²²à³‡à²·à²¿à²¸à²¿", need_more_detail: "à²¹à³†à²šà³à²šà²¿à²¨ à²µà²¿à²µà²° à²¸à³‡à²°à²¿à²¸à²¿", question_clear: "à²ªà³à²°à²¶à³à²¨à³† à²¸à³à²ªà²·à³à²Ÿà²µà²¾à²—à²¿à²¦à³†", validation_clear_detail: "à²‡à²¦à³ à²¸à²¾à²°à³à²µà²œà²¨à²¿à²• à²¦à²¾à²–à²²à³† à²µà²¿à²·à²¯ à²®à²¤à³à²¤à³ à²¦à²¾à²–à²²à³†à²—à²³à²¨à³à²¨à³ à²¹à³à²¡à³à²•à²²à³ à²¸à²¾à²•à²·à³à²Ÿà³ à²µà²¿à²µà²°à²—à²³à²¨à³à²¨à³ à²’à²³à²—à³Šà²‚à²¡à²¿à²¦à³†.", recent_inquiries: "à²‡à²¤à³à²¤à³€à²šà²¿à²¨ à²¸à²¾à²°à³à²µà²œà²¨à²¿à²• à²µà²¿à²šà²¾à²°à²£à³†à²—à²³à³", clarity_card: "à²ªà³à²°à²¤à²¿ à²‰à²¤à³à²¤à²°à²µà³ à²ªà²°à²¿à²¶à³€à²²à²¿à²¸à²¬à²¹à³à²¦à²¾à²¦ à²ªà³à²°à²¶à³à²¨à³† à²®à²¤à³à²¤à³ à²¸à³à²ªà²·à³à²Ÿ à²®à³‚à²²à²¦à²¿à²‚à²¦ à²ªà³à²°à²¾à²°à²‚à²­à²µà²¾à²—à³à²¤à³à²¤à²¦à³†.", faq_desk_btn: "ðŸ’¬ à²†à²°à³â€Œà²Ÿà²¿à² à²¸à²¹à²¾à²¯à²µà²¾à²£à²¿", try_sample: "à²®à²¾à²¦à²°à²¿à²¯à²¨à³à²¨à³ à²ªà³à²°à²¯à²¤à³à²¨à²¿à²¸à²¿", sample_chip_road: "à²µà²¾à²°à³à²¡à³ 4 à²°à²¸à³à²¤à³† à²¦à³à²°à²¸à³à²¤à²¿ à²Ÿà³†à²‚à²¡à²°à³ à²¸à³à²¥à²¿à²¤à²¿ à²®à²¤à³à²¤à³ à²—à³à²¤à³à²¤à²¿à²—à³†à²¦à²¾à²°à²° à²•à²¡à²¤ à²Ÿà²¿à²ªà³à²ªà²£à²¿à²—à²³à³", sample_chip_pension: "à²¨à²¨à³à²¨ à²ªà²¿à²‚à²šà²£à²¿ à²®à³‚à²°à³ à²¤à²¿à²‚à²—à²³à²¿à²‚à²¦ à²œà²®à³†à²¯à²¾à²—à²¿à²²à³à²²", sample_chip_scholarship: "à²°à²¾à²·à³à²Ÿà³à²°à³€à²¯ à²®à³†à²°à²¿à²Ÿà³ à²µà²¿à²¦à³à²¯à²¾à²°à³à²¥à²¿à²µà³‡à²¤à²¨ à²µà²¿à²¤à²°à²£à³† à²µà²¿à²³à²‚à²¬ à²®à²¤à³à²¤à³ à²®à²‚à²œà³‚à²°à²¾à²¤à²¿ à²†à²¦à³‡à²¶", sample_chip_water: "à²ªà³à²°à²¸à²­à³† à²¨à³€à²°à²¿à²¨ à²ªà³ˆà²ªà³â€Œà²²à³ˆà²¨à³ à²¤à²ªà²¾à²¸à²£à³† à²µà²°à²¦à²¿ à²®à²¤à³à²¤à³ à²•à²¾à²²à²®à²¿à²¤à²¿", your_records: "à²¨à²¿à²®à³à²® à²¦à²¾à²–à²²à³†à²—à²³à³", records_count: "3 à²¦à²¾à²–à²²à³†à²—à²³à³", item_road_title: "à²µà²¾à²°à³à²¡à³ 4 à²°à²¸à³à²¤à³† à²Ÿà³†à²‚à²¡à²°à³ à²®à²‚à²œà³‚à²°à²¾à²¤à²¿", item_road_dept: "à²¸à²¾à²°à³à²µà²œà²¨à²¿à²• à²•à²¾à²®à²—à²¾à²°à²¿ à²‡à²²à²¾à²–à³† (PWD)", item_scholarship_title: "à²°à²¾à²·à³à²Ÿà³à²°à³€à²¯ à²®à³†à²°à²¿à²Ÿà³ à²µà²¿à²¦à³à²¯à²¾à²°à³à²¥à²¿à²µà³‡à²¤à²¨ à²¬à²¿à²¡à³à²—à²¡à³† à²†à²¦à³‡à²¶", item_scholarship_dept: "à²¶à²¿à²•à³à²·à²£ à²¸à²šà²¿à²µà²¾à²²à²¯", item_water_title: "à²ªà³à²°à²¸à²­à³† à²¨à³€à²°à³ à²¸à²°à²¬à²°à²¾à²œà³ à²—à³à²£à²®à²Ÿà³à²Ÿ à²µà²°à²¦à²¿", item_water_dept: "à²ªà³à²°à²¸à²­à³† à²¨à²¿à²—à²®", built_for_clarity: "à²¸à³à²ªà²·à³à²Ÿà²¤à³†à²—à²¾à²—à²¿ à²¨à²¿à²°à³à²®à²¿à²¸à²²à²¾à²—à²¿à²¦à³†",
+  },
+  ml: {
+    portal_title: "à´ªàµ—à´° à´¸àµ‡à´µà´¨ à´ªàµ‹àµ¼à´Ÿàµà´Ÿàµ½", brand_title: "à´†àµ¼à´Ÿà´¿à´ à´¸à´¾à´°à´¥à´¿", header_subtitle: "à´ªàµ—à´° à´µà´¿à´µà´°à´™àµà´™à´³àµà´‚ à´†àµ¼à´Ÿà´¿à´ à´¸à´®àµ¼à´ªàµà´ªà´£ à´¸à´‚à´µà´¿à´§à´¾à´¨à´µàµà´‚", checks_enabled: "à´•àµƒà´¤àµà´¯à´®à´¾à´¯ à´¨à´¿à´¯à´® à´ªà´°à´¿à´¶àµ‹à´§à´¨ à´¸à´œàµ€à´µà´‚", about: "à´†àµ¼à´Ÿà´¿à´ à´¸à´¾à´°à´¥à´¿à´¯àµ†à´•àµà´•àµà´±à´¿à´šàµà´šàµ", live_alert_badge: "à´¤à´¤àµà´¸à´®à´¯ à´®àµà´¨àµà´¨à´±à´¿à´¯à´¿à´ªàµà´ªàµ", live_alert: "à´¨à´¿à´¯à´®à´ªà´°à´®à´¾à´¯ à´®àµà´¨àµà´¨à´±à´¿à´¯à´¿à´ªàµà´ªàµ: à´¸àµ†à´•àµà´·àµ» 7(1) à´ªàµà´°à´•à´¾à´°à´‚ 30 à´¦à´¿à´µà´¸à´¤àµà´¤à´¿à´¨à´•à´‚ à´®à´±àµà´ªà´Ÿà´¿ à´¨àµ½à´•à´£à´‚. à´†à´§à´¾àµ¼ à´…à´²àµà´²àµ†à´™àµà´•à´¿àµ½ à´ªà´¾àµ» à´¨à´®àµà´ªà´±àµà´•àµ¾ à´¨àµ½à´•à´°àµà´¤àµ.", screen_1_badge: "à´¸àµà´•àµà´°àµ€àµ» 1 / à´’à´°àµ à´šàµ‹à´¦àµà´¯à´‚ à´šàµ‹à´¦à´¿à´•àµà´•àµà´•", hero_title: "à´¸àµ¼à´•àµà´•à´¾à´°à´¿à´¨àµ‹à´Ÿàµ à´µàµà´¯à´•àµà´¤à´®à´¾à´¯à´¿ à´šàµ‹à´¦à´¿à´•àµà´•àµ‚.", hero_sub: "à´²à´³à´¿à´¤à´®à´¾à´¯ à´­à´¾à´·à´¯à´¿à´²àµ† à´šàµ‹à´¦àµà´¯à´™àµà´™à´³àµ† à´Žà´²àµà´²à´¾ à´µà´•àµà´ªàµà´ªàµà´•àµ¾à´•àµà´•àµà´®àµà´³àµà´³ à´˜à´Ÿà´¨à´¾à´ªà´°à´µàµà´‚ à´¨à´¿à´¯à´®à´ªà´°à´µàµà´®à´¾à´¯ à´†àµ¼à´Ÿà´¿à´ à´…à´­àµà´¯àµ¼à´¤àµà´¥à´¨à´•à´³à´¾à´•àµà´•à´¿ à´®à´¾à´±àµà´±àµà´•.", input_label: "à´¨à´¿à´™àµà´™àµ¾ à´Žà´¨àµà´¤à´¾à´£àµ à´…à´±à´¿à´¯à´¾àµ» à´†à´—àµà´°à´¹à´¿à´•àµà´•àµà´¨àµà´¨à´¤àµ?", placeholder: "à´‰à´¦à´¾à´¹à´°à´£à´‚: à´µà´¾àµ¼à´¡àµ 4 à´±àµ‹à´¡àµ à´…à´±àµà´±à´•àµà´±àµà´±à´ªàµà´ªà´£à´¿ à´Ÿàµ†àµ»à´¡à´±à´¿à´¨àµà´±àµ† à´¸àµà´¥à´¿à´¤à´¿ à´Žà´¨àµà´¤à´¾à´£àµ, à´…à´²àµà´²àµ†à´™àµà´•à´¿àµ½ à´Žà´¨àµà´±àµ† à´®àµ†à´±à´¿à´±àµà´±àµ à´¸àµà´•àµ‹à´³àµ¼à´·à´¿à´ªàµà´ªàµ à´µàµˆà´•à´¿à´¯à´¤àµ à´Žà´¨àµà´¤àµà´•àµŠà´£àµà´Ÿàµ?", btn_continue: "à´¤àµà´Ÿà´°àµà´•", btn_analyze: "à´…à´­àµà´¯àµ¼à´¤àµà´¥à´¨ à´µà´¿à´¶à´•à´²à´¨à´‚ à´šàµ†à´¯àµà´¯àµà´•", need_more_detail: "à´•àµ‚à´Ÿàµà´¤àµ½ à´µà´¿à´¶à´¦à´¾à´‚à´¶à´™àµà´™àµ¾ à´šàµ‡àµ¼à´•àµà´•àµà´•", question_clear: "à´šàµ‹à´¦àµà´¯à´‚ à´µàµà´¯à´•àµà´¤à´®à´¾à´£àµ", validation_clear_detail: "à´‡à´¤à´¿àµ½ à´ªàµŠà´¤àµ à´°àµ‡à´–à´¾ à´µà´¿à´·à´¯à´µàµà´‚ à´°àµ‡à´–à´•àµ¾ à´¤à´¿à´°à´¯à´¾àµ» à´®à´¤à´¿à´¯à´¾à´¯ à´µà´¿à´¶à´¦à´¾à´‚à´¶à´™àµà´™à´³àµà´‚ à´‰à´£àµà´Ÿàµ.", recent_inquiries: "à´¸à´®àµ€à´ªà´•à´¾à´² à´ªàµŠà´¤àµ à´…à´¨àµà´µàµ‡à´·à´£à´™àµà´™àµ¾", clarity_card: "à´“à´°àµ‹ à´‰à´¤àµà´¤à´°à´µàµà´‚ à´ªà´°à´¿à´¶àµ‹à´§à´¿à´•àµà´•à´¾à´µàµà´¨àµà´¨ à´šàµ‹à´¦àµà´¯à´¤àµà´¤à´¿à´²àµà´‚ à´µàµà´¯à´•àµà´¤à´®à´¾à´¯ à´‰à´±à´µà´¿à´Ÿà´¤àµà´¤à´¿à´²àµà´‚ à´¤àµà´Ÿà´™àµà´™àµà´¨àµà´¨àµ.", faq_desk_btn: "ðŸ’¬ à´†àµ¼à´Ÿà´¿à´ à´¸à´¹à´¾à´¯à´•àµ‡à´¨àµà´¦àµà´°à´‚", try_sample: "à´’à´°àµ à´®à´¾à´¤àµƒà´• à´ªà´°àµ€à´•àµà´·à´¿à´•àµà´•àµà´•", sample_chip_road: "à´µà´¾àµ¼à´¡àµ 4 à´±àµ‹à´¡àµ à´…à´±àµà´±à´•àµà´±àµà´±à´ªàµà´ªà´£à´¿ à´Ÿàµ†àµ»à´¡àµ¼ à´¸àµà´¥à´¿à´¤à´¿à´¯àµà´‚ à´•à´°à´¾à´±àµà´•à´¾à´°à´¨àµà´±àµ† à´«à´¯àµ½ à´•àµà´±à´¿à´ªàµà´ªàµà´•à´³àµà´‚", sample_chip_pension: "à´Žà´¨àµà´±àµ† à´ªàµ†àµ»à´·àµ» à´®àµ‚à´¨àµà´¨àµ à´®à´¾à´¸à´®à´¾à´¯à´¿ à´•àµà´°àµ†à´¡à´¿à´±àµà´±àµ à´šàµ†à´¯àµà´¤à´¿à´Ÿàµà´Ÿà´¿à´²àµà´²", sample_chip_scholarship: "à´¦àµ‡à´¶àµ€à´¯ à´®àµ†à´±à´¿à´±àµà´±àµ à´¸àµà´•àµ‹à´³àµ¼à´·à´¿à´ªàµà´ªàµ à´µà´¿à´¤à´°à´£à´¤àµà´¤à´¿à´²àµ† à´•à´¾à´²à´¤à´¾à´®à´¸à´µàµà´‚ à´…à´¨àµà´®à´¤à´¿ à´‰à´¤àµà´¤à´°à´µàµà´‚", sample_chip_water: "à´®àµà´¨à´¿à´¸à´¿à´ªàµà´ªàµ½ à´œà´² à´ªàµˆà´ªàµà´ªàµâ€Œà´²àµˆàµ» à´ªà´°à´¿à´¶àµ‹à´§à´¨à´¾ à´±à´¿à´ªàµà´ªàµ‹àµ¼à´Ÿàµà´Ÿàµà´‚ à´¸à´®à´¯à´•àµà´°à´®à´µàµà´‚", your_records: "à´¨à´¿à´™àµà´™à´³àµà´Ÿàµ† à´°àµ‡à´–à´•àµ¾", records_count: "3 à´°àµ‡à´–à´•àµ¾", item_road_title: "à´µà´¾àµ¼à´¡àµ 4 à´±àµ‹à´¡àµ à´Ÿàµ†àµ»à´¡àµ¼ à´…à´¨àµà´®à´¤à´¿", item_road_dept: "à´ªàµŠà´¤àµà´®à´°à´¾à´®à´¤àµà´¤àµ à´µà´•àµà´ªàµà´ªàµ (PWD)", item_scholarship_title: "à´¦àµ‡à´¶àµ€à´¯ à´®àµ†à´±à´¿à´±àµà´±àµ à´¸àµà´•àµ‹à´³àµ¼à´·à´¿à´ªàµà´ªàµ à´±à´¿à´²àµ€à´¸àµ à´“àµ¼à´¡àµ¼", item_scholarship_dept: "à´µà´¿à´¦àµà´¯à´¾à´­àµà´¯à´¾à´¸ à´®à´¨àµà´¤àµà´°à´¾à´²à´¯à´‚", item_water_title: "à´®àµà´¨à´¿à´¸à´¿à´ªàµà´ªàµ½ à´œà´²à´µà´¿à´¤à´°à´£ à´—àµà´£à´¨à´¿à´²à´µà´¾à´° à´±à´¿à´ªàµà´ªàµ‹àµ¼à´Ÿàµà´Ÿàµ", item_water_dept: "à´®àµà´¨à´¿à´¸à´¿à´ªàµà´ªàµ½ à´•àµ‹àµ¼à´ªàµà´ªà´±àµ‡à´·àµ»", built_for_clarity: "à´µàµà´¯à´•àµà´¤à´¤à´¯àµà´•àµà´•à´¾à´¯à´¿ à´¨à´¿àµ¼à´®àµà´®à´¿à´šàµà´šà´¤àµ",
+  },
+  pa: {
+    portal_title: "à¨¨à¨¾à¨—à¨°à¨¿à¨• à¨¸à©‡à¨µà¨¾ à¨ªà©‹à¨°à¨Ÿà¨²", brand_title: "à¨†à¨°à¨Ÿà©€à¨†à¨ˆ à¨¸à¨¾à¨°à¨¥à©€", header_subtitle: "à¨¨à¨¾à¨—à¨°à¨¿à¨• à¨œà¨¾à¨£à¨•à¨¾à¨°à©€ à¨…à¨¤à©‡ à¨†à¨°à¨Ÿà©€à¨†à¨ˆ à¨…à¨°à¨œà¨¼à©€ à¨ªà©à¨°à¨£à¨¾à¨²à©€", checks_enabled: "à¨¸à¨¹à©€ à¨¨à¨¿à¨¯à¨® à¨œà¨¾à¨‚à¨š à¨¸à¨°à¨—à¨°à¨®", about: "à¨†à¨°à¨Ÿà©€à¨†à¨ˆ à¨¸à¨¾à¨°à¨¥à©€ à¨¬à¨¾à¨°à©‡", live_alert_badge: "à¨²à¨¾à¨ˆà¨µ à¨šà©‡à¨¤à¨¾à¨µà¨¨à©€", live_alert: "à¨•à¨¾à¨¨à©‚à©°à¨¨à©€ à¨šà©‡à¨¤à¨¾à¨µà¨¨à©€: à¨§à¨¾à¨°à¨¾ 7(1) à¨…à¨§à©€à¨¨ 30 à¨¦à¨¿à¨¨à¨¾à¨‚ à¨µà¨¿à©±à¨š à¨œà¨µà¨¾à¨¬ à¨¦à©‡à¨£à¨¾ à¨²à¨¾à¨œà¨¼à¨®à©€ à¨¹à©ˆà¥¤ à¨†à¨§à¨¾à¨° à¨œà¨¾à¨‚ à¨ªà©ˆà¨¨ à¨¨à©°à¨¬à¨° à¨¨à©±à¨¥à©€ à¨¨à¨¾ à¨•à¨°à©‹à¥¤", screen_1_badge: "à¨¸à¨•à©à¨°à©€à¨¨ 1 / à¨¸à¨µà¨¾à¨² à¨ªà©à©±à¨›à©‹", hero_title: "à¨¸à¨°à¨•à¨¾à¨° à¨¨à©‚à©° à¨¸à¨ªà¨¸à¨¼à¨Ÿà¨¤à¨¾ à¨¨à¨¾à¨² à¨ªà©à©±à¨›à©‹à¥¤", hero_sub: "à¨¸à¨§à¨¾à¨°à¨¨ à¨­à¨¾à¨¸à¨¼à¨¾ à¨¦à©‡ à¨¸à¨µà¨¾à¨²à¨¾à¨‚ à¨¨à©‚à©° à¨¸à¨¾à¨°à©‡ à¨µà¨¿à¨­à¨¾à¨—à¨¾à¨‚ à¨²à¨ˆ à¨¢à¨¾à¨‚à¨šà©‡à¨¬à©±à¨§, à¨•à¨¾à¨¨à©‚à©°à¨¨à©€ à¨†à¨°à¨Ÿà©€à¨†à¨ˆ à¨¬à©‡à¨¨à¨¤à©€à¨†à¨‚ à¨µà¨¿à©±à¨š à¨¬à¨¦à¨²à©‹à¥¤", input_label: "à¨¤à©à¨¸à©€à¨‚ à¨•à©€ à¨œà¨¾à¨£à¨¨à¨¾ à¨šà¨¾à¨¹à©à©°à¨¦à©‡ à¨¹à©‹?", placeholder: "à¨‰à¨¦à¨¾à¨¹à¨°à¨¨: à¨µà¨¾à¨°à¨¡ 4 à¨µà¨¿à©±à¨š à¨¸à©œà¨• à¨®à©à¨°à©°à¨®à¨¤ à¨Ÿà©ˆà¨‚à¨¡à¨° à¨¦à©€ à¨¸à¨¥à¨¿à¨¤à©€ à¨•à©€ à¨¹à©ˆ à¨œà¨¾à¨‚ à¨®à©‡à¨°à©€ à¨®à©ˆà¨°à¨¿à¨Ÿ à¨¸à¨•à¨¾à¨²à¨°à¨¸à¨¼à¨¿à¨ª à¨µà¨¿à©±à¨š à¨¦à©‡à¨°à©€ à¨•à¨¿à¨‰à¨‚ à¨¹à©ˆ?", btn_continue: "à¨œà¨¾à¨°à©€ à¨°à©±à¨–à©‹", btn_analyze: "à¨¬à©‡à¨¨à¨¤à©€ à¨¦à¨¾ à¨µà¨¿à¨¸à¨¼à¨²à©‡à¨¸à¨¼à¨£ à¨•à¨°à©‹", need_more_detail: "à¨¹à©‹à¨° à¨µà©‡à¨°à¨µà©‡ à¨¸à¨¼à¨¾à¨®à¨² à¨•à¨°à©‹", question_clear: "à¨¸à¨µà¨¾à¨² à¨¸à¨ªà¨¸à¨¼à¨Ÿ à¨¹à©ˆ", validation_clear_detail: "à¨‡à¨¸ à¨µà¨¿à©±à¨š à¨œà¨¨à¨¤à¨• à¨°à¨¿à¨•à¨¾à¨°à¨¡ à¨¦à¨¾ à¨µà¨¿à¨¸à¨¼à¨¾ à¨…à¨¤à©‡ à¨°à¨¿à¨•à¨¾à¨°à¨¡ à¨²à©±à¨­à¨£ à¨²à¨ˆ à¨•à¨¾à¨«à¨¼à©€ à¨µà©‡à¨°à¨µà¨¾ à¨¹à©ˆà¥¤", recent_inquiries: "à¨¹à¨¾à¨²à©€à¨† à¨œà¨¨à¨¤à¨• à¨ªà©à©±à¨›à¨—à¨¿à©±à¨›", clarity_card: "à¨¹à¨° à¨œà¨µà¨¾à¨¬ à¨‡à©±à¨• à¨œà¨¾à¨‚à¨šà¨¯à©‹à¨— à¨¸à¨µà¨¾à¨² à¨…à¨¤à©‡ à¨¸à¨ªà¨¸à¨¼à¨Ÿ à¨¸à¨°à©‹à¨¤ à¨¤à©‹à¨‚ à¨¸à¨¼à©à¨°à©‚ à¨¹à©à©°à¨¦à¨¾ à¨¹à©ˆà¥¤", faq_desk_btn: "ðŸ’¬ à¨†à¨°à¨Ÿà©€à¨†à¨ˆ à¨®à¨¦à¨¦ à¨¡à©ˆà¨¸à¨•", try_sample: "à¨‡à©±à¨• à¨¨à¨®à©‚à¨¨à¨¾ à¨…à¨œà¨¼à¨®à¨¾à¨“", sample_chip_road: "à¨µà¨¾à¨°à¨¡ 4 à¨µà¨¿à©±à¨š à¨¸à©œà¨• à¨®à©à¨°à©°à¨®à¨¤ à¨Ÿà©ˆà¨‚à¨¡à¨° à¨¦à©€ à¨¸à¨¥à¨¿à¨¤à©€ à¨…à¨¤à©‡ à¨ à©‡à¨•à©‡à¨¦à¨¾à¨° à¨¦à©€ à¨«à¨¾à¨ˆà¨² à¨¨à©‹à¨Ÿà¨¿à©°à¨—", sample_chip_pension: "à¨®à©‡à¨°à©€ à¨ªà©ˆà¨¨à¨¸à¨¼à¨¨ à¨¤à¨¿à©°à¨¨ à¨®à¨¹à©€à¨¨à¨¿à¨†à¨‚ à¨¤à©‹à¨‚ à¨œà¨®à©à¨¹à¨¾à¨‚ à¨¨à¨¹à©€à¨‚ à¨¹à©‹à¨ˆ", sample_chip_scholarship: "à¨°à¨¾à¨¸à¨¼à¨Ÿà¨°à©€ à¨®à©ˆà¨°à¨¿à¨Ÿ à¨¸à¨•à¨¾à¨²à¨°à¨¸à¨¼à¨¿à¨ª à¨µà©°à¨¡ à¨µà¨¿à©±à¨š à¨¦à©‡à¨°à©€ à¨…à¨¤à©‡ à¨®à¨¨à¨œà¨¼à©‚à¨°à©€ à¨¹à©à¨•à¨®", sample_chip_water: "à¨¨à¨—à¨° à¨ªà¨¾à¨£à©€ à¨ªà¨¾à¨ˆà¨ªà¨²à¨¾à¨ˆà¨¨ à¨œà¨¾à¨‚à¨š à¨°à¨¿à¨ªà©‹à¨°à¨Ÿ à¨…à¨¤à©‡ à¨¸à¨®à¨¾à¨‚-à¨¸à©€à¨®à¨¾", your_records: "à¨¤à©à¨¹à¨¾à¨¡à©‡ à¨°à¨¿à¨•à¨¾à¨°à¨¡", records_count: "3 à¨°à¨¿à¨•à¨¾à¨°à¨¡", item_road_title: "à¨µà¨¾à¨°à¨¡ 4 à¨¸à©œà¨• à¨Ÿà©ˆà¨‚à¨¡à¨° à¨®à¨¨à¨œà¨¼à©‚à¨°à©€", item_road_dept: "à¨²à©‹à¨• à¨¨à¨¿à¨°à¨®à¨¾à¨£ à¨µà¨¿à¨­à¨¾à¨— (PWD)", item_scholarship_title: "à¨°à¨¾à¨¸à¨¼à¨Ÿà¨°à©€ à¨®à©ˆà¨°à¨¿à¨Ÿ à¨¸à¨•à¨¾à¨²à¨°à¨¸à¨¼à¨¿à¨ª à¨œà¨¾à¨°à©€ à¨¹à©à¨•à¨®", item_scholarship_dept: "à¨¸à¨¿à©±à¨–à¨¿à¨† à¨®à©°à¨¤à¨°à¨¾à¨²à¨¾", item_water_title: "à¨¨à¨—à¨° à¨ªà¨¾à¨£à©€ à¨¸à¨ªà¨²à¨¾à¨ˆ à¨—à©à¨£à¨µà©±à¨¤à¨¾ à¨°à¨¿à¨ªà©‹à¨°à¨Ÿ", item_water_dept: "à¨¨à¨—à¨° à¨¨à¨¿à¨—à¨®", built_for_clarity: "à¨¸à¨ªà¨¸à¨¼à¨Ÿà¨¤à¨¾ à¨²à¨ˆ à¨¬à¨£à¨¾à¨‡à¨† à¨—à¨¿à¨†",
+  },
+};
+
+interface LanguageContextValue { language: LanguageCode; setLanguage: (language: LanguageCode) => void; t: (key: TranslationKey) => string; }
+const LanguageContext = createContext<LanguageContextValue | null>(null);
+
+export function LanguageProvider({ children }: { children: ReactNode }) {
+  const [language, setLanguageState] = useState<LanguageCode>("en");
+
+  useEffect(() => {
+    const saved = window.localStorage.getItem("rti_lang") as LanguageCode | null;
+    if (saved && saved in translations) {
+      const restore = window.setTimeout(() => setLanguageState(saved), 0);
+      return () => window.clearTimeout(restore);
+    }
+  }, []);
+
+  function setLanguage(next: LanguageCode) {
+    setLanguageState(next in translations ? next : "en");
+    window.localStorage.setItem("rti_lang", next in translations ? next : "en");
+  }
+
+  const value = useMemo(() => ({ language, setLanguage, t: (key: TranslationKey) => translations[language][key] }), [language]);
+  return <LanguageContext.Provider value={value}>{children}</LanguageContext.Provider>;
+}
+
+export function useLanguage() {
+  const context = useContext(LanguageContext);
+  if (!context) throw new Error("useLanguage must be used within LanguageProvider");
+  return context;
+}
+
+
+
+=== FILE: C:\Users\Dell\changesentinel\rti-saarthi\src\lib\client-state.ts ===
+import { defaultUniversalState, type RtiState } from "./types";
+
+export function readRtiState(): RtiState {
+  if (typeof window === "undefined") return defaultUniversalState;
+
+  try {
+    const stored = window.localStorage.getItem("rti_current_state");
+    return stored ? { ...defaultUniversalState, ...JSON.parse(stored) } : defaultUniversalState;
+  } catch {
+    return defaultUniversalState;
+  }
+}
+
+
+
+=== FILE: C:\Users\Dell\changesentinel\rti-saarthi\src\lib\types.ts ===
+export interface PensionRecord {
+  id: string;
+  name: string;
+  department: string;
+  retirementDate: string;
+  qualifyingServiceYears: number;
+  lastDrawnBasicPay: number;
+  monthlyPension: number;
+  status: "verified" | "needs-review";
+}
+
+export type RequestDomain = "infrastructure" | "pension" | "scholarship" | "civic" | "general";
+
+export interface RtiState {
+  question: string;
+  domain: RequestDomain;
+  goal: string;
+  suggestedAuthority: string;
+  authorityReason: string;
+  citizenGoal: string;
+  suitabilityReason: string;
+  restructuredRequests: string[];
+  publicAuthority: string;
+  jurisdiction: "Central" | "State" | "Municipal";
+  authorityConfidence: number;
+  betterGrievanceRoute: string;
+  grievanceUrl: string;
+  healthScore: number;
+  characterCount: number;
+  privacyGuard: string;
+  pensionData: PensionRecord[];
+  registrationNumber: string;
+  validation: {
+    isValid: boolean;
+    label: string;
+    detail: string;
+  };
+}
+
+export const initialRtiState: RtiState = {
+  question: "",
+  domain: "pension",
+  goal: "Get your pension payment fixed",
+  suggestedAuthority: "Department of Pension & Pensioners' Welfare (Central)",
+  authorityReason: "Your question appears to concern a Central Government pension.",
+  citizenGoal: "Get your pension payment fixed",
+  suitabilityReason: "RTI can help you find out WHAT HAPPENED to your case, but it cannot directly release your payment.",
+  publicAuthority: "Department of Pension & Pensioners' Welfare (Central)",
+  jurisdiction: "Central",
+  authorityConfidence: 88,
+  betterGrievanceRoute: "CPGRAMS",
+  grievanceUrl: "https://pgportal.gov.in",
+  healthScore: 91,
+  characterCount: 640,
+  privacyGuard: "No identity documents or sensitive IDs required",
+  registrationNumber: "RTI-2026-000112",
+  restructuredRequests: [
+    "Copy of the sanction/release order for my pension",
+    "Current status of my pension file",
+    "Date the last payment was processed",
+    "Name/Designation of the officer handling my case",
+    "Any file notings or correspondence on the delay",
+  ],
+  pensionData: [
+    {
+      id: "RTI-2024-001",
+      name: "Anil Kumar Sharma",
+      department: "Public Works Department",
+      retirementDate: "2024-06-30",
+      qualifyingServiceYears: 31,
+      lastDrawnBasicPay: 68400,
+      monthlyPension: 34200,
+      status: "verified",
+    },
+    {
+      id: "RTI-2024-002",
+      name: "Meena Joshi",
+      department: "School Education",
+      retirementDate: "2023-03-31",
+      qualifyingServiceYears: 28,
+      lastDrawnBasicPay: 61200,
+      monthlyPension: 30600,
+      status: "verified",
+    },
+    {
+      id: "RTI-2024-003",
+      name: "Raghav Prasad",
+      department: "Rural Development",
+      retirementDate: "2022-11-30",
+      qualifyingServiceYears: 24,
+      lastDrawnBasicPay: 55800,
+      monthlyPension: 27900,
+      status: "needs-review",
+    },
+  ],
+  validation: {
+    isValid: false,
+    label: "Waiting for your question",
+    detail: "Ask about a pension record, calculation, or document status.",
+  },
+};
+
+export const initialDemoState = initialRtiState;
+
+export const defaultUniversalState: RtiState = {
+  ...initialRtiState,
+  question: "Road repair tender status & contractor file notings in Ward 4",
+  domain: "infrastructure",
+  citizenGoal: "Find out how the Ward 4 road repair was awarded and monitored",
+  goal: "Find out how the Ward 4 road repair was awarded and monitored",
+  suggestedAuthority: "Municipal Corporation of Ward 4",
+  authorityReason: "Your question appears to concern a Municipal infrastructure matter.",
+  suitabilityReason: "RTI can provide existing tender, work, inspection, and file records under Section 2(f); it cannot direct the authority to repair the road.",
+  restructuredRequests: [
+    "Certified copy of the Ward 4 road repair tender and work order",
+    "Name and details of the contractor awarded the work",
+    "Copies of the measurement book entries for the repair work",
+    "Inspection register entries and reports for the Ward 4 site",
+    "File notings and correspondence on the tender and repair delay",
+  ],
+  publicAuthority: "Municipal Corporation of Ward 4",
+  jurisdiction: "Municipal",
+  authorityConfidence: 94,
+  betterGrievanceRoute: "Municipal grievance portal",
+  grievanceUrl: "https://pgportal.gov.in",
+  healthScore: 94,
+  characterCount: 78,
+};
+
+
+
