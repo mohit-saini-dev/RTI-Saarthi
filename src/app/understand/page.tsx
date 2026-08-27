@@ -59,7 +59,7 @@ export default function UnderstandPage() {
                 <p className="text-xs font-bold tracking-[0.14em] text-[#c45b35] uppercase">Information route</p>
                 <h2 className="mt-3 text-2xl font-semibold">Find out what happened</h2>
                 <p className="mt-3 leading-7 text-[#173c38]/65">
-                  Use RTI to request the status, file movement, and reasons behind the delay.
+                  {state.suitabilityReason}
                 </p>
               </div>
               <Link
@@ -73,18 +73,18 @@ export default function UnderstandPage() {
             <div className="flex flex-col justify-between rounded-2xl border border-[#173c38]/10 bg-[#e5eee4] p-6 shadow-[0_18px_45px_rgba(23,60,56,0.05)]">
               <div>
                 <p className="text-xs font-bold tracking-[0.14em] text-[#27745e] uppercase">Resolution route</p>
-                <h2 className="mt-3 text-2xl font-semibold">Get payment resolved</h2>
+                <h2 className="mt-3 text-2xl font-semibold">Use the resolution route</h2>
                 <p className="mt-3 leading-7 text-[#173c38]/65">
-                  Submit a grievance to the department that can take action on your delayed payment.
+                  {state.betterGrievanceRoute}
                 </p>
               </div>
               <a
-                href="https://pgportal.gov.in"
+                href={state.grievanceUrl}
                 target="_blank"
                 rel="noreferrer"
                 className="mt-8 flex min-h-12 items-center justify-center gap-2 rounded-xl border border-[#173c38]/20 bg-transparent px-5 py-3 text-center text-sm font-bold text-[#173c38] transition hover:border-[#173c38] hover:bg-white"
               >
-                Get payment resolved <ExternalLink size={16} />
+                Open {state.betterGrievanceRoute} <ExternalLink size={16} />
               </a>
             </div>
           </div>

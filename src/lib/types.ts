@@ -26,6 +26,8 @@ export interface RtiState {
   betterGrievanceRoute: string;
   grievanceUrl: string;
   healthScore: number;
+  usedFallback: boolean;
+  jurisdictionWarning: boolean;
   characterCount: number;
   privacyGuard: string;
   pensionData: PensionRecord[];
@@ -51,6 +53,8 @@ export const initialRtiState: RtiState = {
   betterGrievanceRoute: "CPGRAMS",
   grievanceUrl: "https://pgportal.gov.in",
   healthScore: 91,
+  usedFallback: false,
+  jurisdictionWarning: false,
   characterCount: 640,
   privacyGuard: "No identity documents or sensitive IDs required",
   registrationNumber: "RTI-2026-000112",
@@ -124,5 +128,7 @@ export const defaultUniversalState: RtiState = {
   betterGrievanceRoute: "Municipal grievance portal",
   grievanceUrl: "https://pgportal.gov.in",
   healthScore: 94,
+  usedFallback: false,
+  jurisdictionWarning: true,
   characterCount: 78,
 };

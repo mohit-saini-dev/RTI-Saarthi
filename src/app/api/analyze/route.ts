@@ -12,23 +12,72 @@ function offlineState(query: string): RtiState {
       : normalizedQuery.match(/road|ward|pothole|tender|contractor/)
         ? { domain: "infrastructure" as const, goal: "Inspect road repair tender status and contractor execution in Ward 4", requests: ["Certified copy of tender agreement and sanctioned timeline", "Measurement Book (MB) entries", "Inspection logbook", "Delay penalty records"], authority: "Public Works Department (PWD) / Municipal Corporation", confidence: 94, jurisdiction: "Municipal" as const, reason: "The request concerns a Municipal road infrastructure project.", route: "Municipal grievance portal", url: "https://pgportal.gov.in" }
         : { domain: "civic" as const, goal: "Obtain official public records and inspection logs for civic service request", requests: defaultUniversalState.restructuredRequests, authority: "Municipal Corporation / Civic Administration", confidence: 85, jurisdiction: "Municipal" as const, reason: "The request concerns a civic service and its official records.", route: "Municipal grievance portal", url: "https://pgportal.gov.in" };
-  return { ...defaultUniversalState, question: query.trim() || defaultUniversalState.question, domain: preset.domain, goal: preset.goal, citizenGoal: preset.goal, suggestedAuthority: preset.authority, publicAuthority: preset.authority, authorityReason: preset.reason, restructuredRequests: preset.requests, authorityConfidence: preset.confidence, jurisdiction: preset.jurisdiction, betterGrievanceRoute: preset.route, grievanceUrl: preset.url, characterCount: query.length };
+  return {
+    ...defaultUniversalState,
+    question: query.trim() || defaultUniversalState.question,
+    domain: preset.domain,
+    goal: preset.goal,
+    citizenGoal: preset.goal,
+    suggestedAuthority: preset.authority,
+    publicAuthority: preset.authority,
+    authorityReason: preset.reason,
+    restructuredRequests: preset.requests,
+    authorityConfidence: preset.confidence,
+    jurisdiction: preset.jurisdiction,
+    jurisdictionWarning: preset.jurisdiction !== "Central",
+    betterGrievanceRoute: preset.route,
+    grievanceUrl: preset.url,
+    characterCount: query.length,
+    usedFallback: true,
+  };
 }
 
 function normalizeResult(query: string, result: Partial<RtiState>): RtiState {
   const fallback = offlineState(query);
   const domains: RequestDomain[] = ["infrastructure", "pension", "scholarship", "civic", "general"];
   const jurisdictions: RtiState["jurisdiction"][] = ["Central", "State", "Municipal"];
+  const stringValue = (value: unknown, fallbackValue: string) =>
+    typeof value === "string" && value.trim() ? value.trim() : fallbackValue;
+  const scoreValue = (value: unknown, fallbackValue: number) =>
+    typeof value === "number" && Number.isFinite(value) && value >= 0 && value <= 100 ? value : fallbackValue;
+  const requests = Array.isArray(result.restructuredRequests)
+    && result.restructuredRequests.length >= 4
+    && result.restructuredRequests.length <= 5
+    && result.restructuredRequests.every((request) => typeof request === "string" && request.trim())
+    ? result.restructuredRequests.map((request) => request.trim())
+    : fallback.restructuredRequests;
+  const domain = domains.includes(result.domain as RequestDomain) ? result.domain as RequestDomain : fallback.domain;
+  const jurisdiction = jurisdictions.includes(result.jurisdiction as RtiState["jurisdiction"])
+    ? result.jurisdiction as RtiState["jurisdiction"]
+    : fallback.jurisdiction;
+  const citizenGoal = stringValue(result.citizenGoal, fallback.citizenGoal);
+  const suitabilityReason = stringValue(result.suitabilityReason, fallback.suitabilityReason);
+  const publicAuthority = stringValue(
+    result.publicAuthority,
+    stringValue(result.suggestedAuthority, fallback.publicAuthority),
+  );
+  const authorityReason = stringValue(result.authorityReason, suitabilityReason);
+
   return {
     ...fallback,
-    ...result,
     question: query.trim(),
-    domain: domains.includes(result.domain as RequestDomain) ? result.domain as RequestDomain : fallback.domain,
-    jurisdiction: jurisdictions.includes(result.jurisdiction as RtiState["jurisdiction"]) ? result.jurisdiction as RtiState["jurisdiction"] : fallback.jurisdiction,
-    restructuredRequests: Array.isArray(result.restructuredRequests) && result.restructuredRequests.length >= 4 ? result.restructuredRequests.slice(0, 5).map(String) : fallback.restructuredRequests,
-    authorityConfidence: typeof result.authorityConfidence === "number" ? result.authorityConfidence : fallback.authorityConfidence,
-    healthScore: typeof result.healthScore === "number" ? result.healthScore : fallback.healthScore,
+    domain,
+    citizenGoal,
+    goal: citizenGoal,
+    suitabilityReason,
+    authorityReason,
+    restructuredRequests: requests,
+    publicAuthority,
+    suggestedAuthority: publicAuthority,
+    jurisdiction,
+    jurisdictionWarning: jurisdiction !== "Central",
+    authorityConfidence: scoreValue(result.authorityConfidence, fallback.authorityConfidence),
+    betterGrievanceRoute: stringValue(result.betterGrievanceRoute, fallback.betterGrievanceRoute),
+    grievanceUrl: stringValue(result.grievanceUrl, fallback.grievanceUrl),
+    healthScore: scoreValue(result.healthScore, fallback.healthScore),
+    privacyGuard: stringValue(result.privacyGuard, fallback.privacyGuard),
     characterCount: query.length,
+    usedFallback: false,
   };
 }
 
@@ -47,16 +96,14 @@ export async function POST(request: Request) {
       response_format: { type: "json_object" },
       messages: [
         { role: "system", content: "You are a careful Indian RTI request analyzer. Return only JSON matching the requested schema. RTI under Section 2(f) seeks existing records, not explanations, action, or opinions. Suggest 4-5 precise record requests such as certified work orders, measurement books, file notings, inspection registers, and officer designations. Never request Aadhaar, PAN, or sensitive identity documents." },
-        { role: "user", content: `Analyze this citizen query: ${query}\nReturn JSON with: domain (infrastructure|pension|scholarship|civic|general), citizenGoal, suitabilityReason, restructuredRequests (array of 4-5 strings), publicAuthority, jurisdiction (Central|State|Municipal), authorityConfidence (0-100), betterGrievanceRoute, grievanceUrl, healthScore (0-100), privacyGuard.` },
+        { role: "user", content: `Analyze this citizen query: ${query}\nReturn exactly one JSON object with no additional keys or markdown. Its keys must be exactly: domain (infrastructure|pension|scholarship|civic|general), citizenGoal, suitabilityReason, restructuredRequests (an array of 4-5 strings), publicAuthority, suggestedAuthority (exactly the same string as publicAuthority), jurisdiction (Central|State|Municipal), authorityConfidence (number 0-100), authorityReason, betterGrievanceRoute, grievanceUrl, healthScore (number 0-100), privacyGuard.` },
       ],
     });
     const content = completion.choices[0]?.message.content;
     const parsed = content ? JSON.parse(content) as Partial<RtiState> : {};
-    if (parsed.goal && !parsed.citizenGoal) parsed.citizenGoal = parsed.goal;
-    if (parsed.suggestedAuthority && !parsed.publicAuthority) parsed.publicAuthority = parsed.suggestedAuthority;
-    if (parsed.authorityReason && !parsed.suitabilityReason) parsed.suitabilityReason = parsed.authorityReason;
     return Response.json(normalizeResult(query, parsed));
-  } catch {
+  } catch (error) {
+    console.error("RTI analysis failed; returning offline fallback", error);
     return Response.json(offlineState(query));
   }
 }

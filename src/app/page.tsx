@@ -37,6 +37,7 @@ export default function Home() {
       });
       const data = await response.json();
       localStorage.setItem("rti_current_state", JSON.stringify(data));
+      window.dispatchEvent(new Event("rti-state-updated"));
       router.push("/understand");
     } finally {
       setIsAnalyzing(false);
