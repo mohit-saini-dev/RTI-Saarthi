@@ -24,7 +24,9 @@ export default function HealthCheckPage() {
   const jurisdiction = state?.jurisdiction || "Central";
   const isCentral = jurisdiction === "Central";
   const charCount = state?.characterCount || 53;
-  const healthScore = state?.healthScore || (isCentral ? 92 : 84);
+
+  // Calibrated score: 92 for Central, 68 if a jurisdiction warning is flagged
+  const healthScore = isCentral ? 92 : 68;
 
   return (
     <main className="min-h-screen bg-[#f5f1e8] text-[#173c38]">
@@ -56,15 +58,29 @@ export default function HealthCheckPage() {
           <div className="flex flex-col justify-between gap-6 sm:flex-row sm:items-center">
             <div>
               <h1 className="text-4xl leading-[1.08] font-semibold tracking-[-0.035em] sm:text-6xl">
-                Ready for a clean <br className="hidden sm:inline" />filing.
+                {isCentral ? (
+                  <>
+                    Ready for a clean <br className="hidden sm:inline" />filing.
+                  </>
+                ) : (
+                  <>
+                    One check requires <br className="hidden sm:inline" />attention.
+                  </>
+                )}
               </h1>
               <p className="mt-4 max-w-xl text-base text-[#173c38]/70">
-                Deterministic rule engines keep your request focused, legally answerable, and routed to the correct portal.
+                {isCentral
+                  ? "Deterministic rule engines verified that your request is focused, answerable, and ready for central portal submission."
+                  : "Deterministic rule engines detected a portal routing issue. Review the jurisdiction notice below before proceeding."}
               </p>
             </div>
 
             {/* Health Score Dial */}
-            <div className="flex size-28 shrink-0 flex-col items-center justify-center rounded-full bg-[#173c38] text-[#f5f1e8] shadow-lg">
+            <div
+              className={`flex size-28 shrink-0 flex-col items-center justify-center rounded-full text-[#f5f1e8] shadow-lg ${
+                isCentral ? "bg-[#173c38]" : "bg-[#c45b35]"
+              }`}
+            >
               <span className="text-3xl font-extrabold leading-none">{healthScore}</span>
               <span className="mt-1 text-[10px] font-semibold tracking-wider text-[#f5f1e8]/70 uppercase">
                 OUT OF 100
