@@ -5,8 +5,10 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import { type RtiState } from "@/src/lib/types";
 import { readRtiState, writeRtiState } from "@/src/lib/client-state";
+import { useLanguage } from "@/src/context/LanguageContext";
 
 export default function QuestionPage() {
+  const { t } = useLanguage();
   const [isEditing, setIsEditing] = useState(false);
   const [state, setState] = useState<RtiState | null>(null);
   const [requests, setRequests] = useState<string[]>([]);
@@ -40,25 +42,25 @@ export default function QuestionPage() {
             </div>
             <div>
               <p className="text-sm font-bold tracking-[0.16em] uppercase">RTI Saarthi</p>
-              <p className="text-xs text-[#173c38]/60">Citizen Intelligence &amp; RTI Filing Layer</p>
+              <p className="text-xs text-[#173c38]/60">{t("workflow_subtitle")}</p>
             </div>
           </Link>
           <div className="hidden items-center gap-2 text-xs font-semibold text-[#173c38]/60 sm:flex">
             <ShieldCheck size={16} />
-            Sahi Sawal
+            {t("sahi_sawal")}
           </div>
         </header>
 
         <section className="mx-auto flex w-full max-w-4xl flex-1 flex-col justify-center py-14 lg:py-20">
           <div className="mb-7 flex items-center gap-2 text-sm font-semibold text-[#c45b35]">
             <ShieldCheck size={17} />
-            Screen 3 / Sahi Sawal
+            {t("screen3_badge")}
           </div>
           <h1 className="max-w-3xl text-4xl leading-[1.05] font-semibold tracking-[-0.035em] sm:text-6xl">
-            Structured requests for existing public records under Section 2(f):
+            {t("structured_requests_title")}
           </h1>
           <p className="mt-7 max-w-3xl text-lg leading-8 text-[#173c38]/70">
-            These four requests turn your inquiry into specific, tangible records that can be sought under Section 2(f).
+            {t("structured_requests_desc")}
           </p>
 
           <div className="mt-10 space-y-3">
@@ -92,13 +94,13 @@ export default function QuestionPage() {
               className="flex min-h-12 items-center justify-center gap-2 rounded-xl border border-[#173c38]/20 px-5 py-3 text-sm font-bold transition hover:border-[#173c38] hover:bg-white"
             >
               {isEditing ? <Check size={16} /> : <Pencil size={16} />}
-              {isEditing ? "Done editing" : "Edit"}
+              {isEditing ? t("done_editing") : t("edit")}
             </button>
             <Link
               href="/authority"
               className="flex min-h-12 items-center justify-center gap-2 rounded-xl bg-[#c45b35] px-5 py-3 text-center text-sm font-bold text-white transition hover:bg-[#a94728]"
             >
-              Use these records <ArrowRight size={17} />
+              {t("use_records")} <ArrowRight size={17} />
             </Link>
           </div>
         </section>

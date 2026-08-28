@@ -5,8 +5,10 @@ import Link from "next/link";
 import { ArrowLeft, Check, ClipboardList, Copy, Download, ShieldAlert, ShieldCheck } from "lucide-react";
 import { type RtiState } from "@/src/lib/types";
 import { readRtiState } from "@/src/lib/client-state";
+import { useLanguage } from "@/src/context/LanguageContext";
 
 export default function AppealPage() {
+  const { t } = useLanguage();
   const [state, setState] = useState<RtiState | null>(null);
   const [copied, setCopied] = useState(false);
 
@@ -99,12 +101,12 @@ export default function AppealPage() {
             </div>
             <div>
               <p className="text-sm font-bold tracking-[0.16em] uppercase">RTI Saarthi</p>
-              <p className="text-xs text-[#173c38]/60">Citizen Intelligence &amp; RTI Filing Layer</p>
+              <p className="text-xs text-[#173c38]/60">{t("workflow_subtitle")}</p>
             </div>
           </Link>
           <div className="hidden items-center gap-2 text-xs font-semibold text-[#173c38]/60 sm:flex">
             <ShieldCheck size={16} />
-            Appeal Guidance
+            {t("appeal_guidance")}
           </div>
         </header>
 
@@ -112,45 +114,45 @@ export default function AppealPage() {
         <section className="mx-auto flex w-full max-w-4xl flex-1 flex-col justify-center py-12 pb-28 lg:py-16 lg:pb-28">
           <div className="mb-4 flex items-center gap-2 text-sm font-semibold text-[#c45b35]">
             <ShieldAlert size={17} />
-            Screen 8 / Appeal guidance &amp; escalation
+            {t("screen8_badge")}
           </div>
 
           <h1 className="max-w-3xl text-4xl leading-[1.08] font-semibold tracking-[-0.035em] sm:text-6xl">
-            Ready for the next step.
+            {t("appeal_title")}
           </h1>
           <p className="mt-5 max-w-3xl text-lg leading-8 text-[#173c38]/70">
-            If the Public Information Officer does not respond within the applicable statutory timeline or furnishes incomplete records, a First Appeal may be filed under Section 19(1).
+            {t("appeal_desc")}
           </p>
 
           {/* Calibrated Guidance Timeline */}
           <div className="mt-8 grid gap-4 sm:grid-cols-3">
             <div className="rounded-2xl border border-[#173c38]/10 bg-white p-5 shadow-sm">
-              <span className="text-xs font-bold uppercase tracking-wider text-[#c45b35]">Response Period</span>
-              <h4 className="mt-1 text-base font-bold">Standard 30 Days</h4>
-              <p className="mt-1 text-xs text-[#173c38]/70">Usually 30 days from application receipt under Section 7(1), subject to statutory exceptions.</p>
+              <span className="text-xs font-bold uppercase tracking-wider text-[#c45b35]">{t("response_period")}</span>
+              <h4 className="mt-1 text-base font-bold">{t("standard_30")}</h4>
+              <p className="mt-1 text-xs text-[#173c38]/70">{t("response_period_desc")}</p>
             </div>
             <div className="rounded-2xl border border-[#173c38]/10 bg-white p-5 shadow-sm">
-              <span className="text-xs font-bold uppercase tracking-wider text-[#27745e]">First Appeal</span>
-              <h4 className="mt-1 text-base font-bold">First Appellate Authority</h4>
-              <p className="mt-1 text-xs text-[#173c38]/70">Submit to the FAA of {publicAuthority} if no response or an unsatisfactory reply is received.</p>
+              <span className="text-xs font-bold uppercase tracking-wider text-[#27745e]">{t("first_appeal")}</span>
+              <h4 className="mt-1 text-base font-bold">{t("first_appellate_authority")}</h4>
+              <p className="mt-1 text-xs text-[#173c38]/70">{t("first_appeal_desc")} {publicAuthority}.</p>
             </div>
             <div className="rounded-2xl border border-[#173c38]/10 bg-white p-5 shadow-sm">
-              <span className="text-xs font-bold uppercase tracking-wider text-[#173c38]">Second Appeal</span>
-              <h4 className="mt-1 text-base font-bold">Information Commission</h4>
-              <p className="mt-1 text-xs text-[#173c38]/70">Available before the Central/State Information Commission with statutory review powers.</p>
+              <span className="text-xs font-bold uppercase tracking-wider text-[#173c38]">{t("second_appeal")}</span>
+              <h4 className="mt-1 text-base font-bold">{t("information_commission")}</h4>
+              <p className="mt-1 text-xs text-[#173c38]/70">{t("second_appeal_desc")}</p>
             </div>
           </div>
 
           <p className="mt-3 text-xs italic text-[#173c38]/60">
-            * Informational guidance generated for demonstration purposes — not legal advice.
+            {t("informational_disclaimer")}
           </p>
 
           {/* AI-Assisted Draft Box */}
           <div className="mt-6 rounded-2xl border border-[#173c38]/10 bg-[#fffdf8] p-6 shadow-sm">
             <div className="flex flex-wrap items-center justify-between gap-3 border-b border-[#173c38]/10 pb-4">
               <div>
-                <span className="text-sm font-bold text-[#173c38]">✓ AI-Assisted First Appeal Draft</span>
-                <p className="text-xs text-[#173c38]/60">Informational guidance under Section 19(1) — review all details before formal submission.</p>
+                <span className="text-sm font-bold text-[#173c38]">{t("draft_title")}</span>
+                <p className="text-xs text-[#173c38]/60">{t("draft_desc")}</p>
               </div>
 
               <div className="flex items-center gap-2">
@@ -160,14 +162,14 @@ export default function AppealPage() {
                   className="flex items-center gap-1.5 rounded-xl border border-[#173c38]/20 bg-white px-3.5 py-2 text-xs font-bold text-[#173c38] transition hover:border-[#173c38]"
                 >
                   {copied ? <Check size={14} className="text-[#27745e]" /> : <Copy size={14} />}
-                  {copied ? "Copied!" : "Copy Draft"}
+                  {copied ? t("copied") : t("copy_draft")}
                 </button>
                 <button
                   type="button"
                   onClick={handleDownload}
                   className="flex items-center gap-1.5 rounded-xl bg-[#173c38] px-3.5 py-2 text-xs font-bold text-white transition hover:bg-[#27745e]"
                 >
-                  <Download size={14} /> Download .txt
+                  <Download size={14} /> {t("download_txt")}
                 </button>
               </div>
             </div>
@@ -186,13 +188,13 @@ export default function AppealPage() {
               href="/review"
               className="flex min-h-12 items-center justify-center gap-2 rounded-xl border border-[#173c38]/20 bg-white px-6 py-3 text-sm font-bold transition hover:border-[#173c38]"
             >
-              <ArrowLeft size={16} /> Back to Review
+              <ArrowLeft size={16} /> {t("back_review")}
             </Link>
             <Link
               href="/"
               className="flex min-h-12 items-center justify-center rounded-xl bg-[#c45b35] px-8 py-3 text-sm font-bold text-white transition hover:bg-[#a94728]"
             >
-              Start New Inquiry
+              {t("start_new")}
             </Link>
           </div>
         </section>

@@ -5,8 +5,10 @@ import Link from "next/link";
 import { ArrowRight, CheckCircle2, Circle, Clock, ClipboardList, ShieldCheck } from "lucide-react";
 import { type RtiState } from "@/src/lib/types";
 import { readRtiState } from "@/src/lib/client-state";
+import { useLanguage } from "@/src/context/LanguageContext";
 
 export default function JourneyPage() {
+  const { t } = useLanguage();
   const [state, setState] = useState<RtiState | null>(null);
 
   useEffect(() => {
@@ -20,34 +22,34 @@ export default function JourneyPage() {
 
   const steps = [
     {
-      title: "Application Submitted & Registered",
+      title: t("step_submitted"),
       desc: `RTI filed with ${authority}. Registration: ${registrationNumber}.`,
       status: "completed",
-      day: "Day 0",
+      day: t("day0"),
     },
     {
-      title: "Assigned to Central/State PIO",
+      title: t("step_assigned"),
       desc: `Assigned to Central PIO — ${authority} (No citizen action needed).`,
       status: "completed",
-      day: "Day 3",
+      day: t("day3"),
     },
     {
-      title: "Internal Section Scrutiny & Record Retrieval",
+      title: t("step_scrutiny"),
       desc: "Section scrutiny and certified record retrieval under Section 2(f).",
       status: "in_progress",
-      day: "Day 12",
+      day: t("day12"),
     },
     {
-      title: "Statutory Response Window Closes",
+      title: t("step_response"),
       desc: "Statutory response window expires under Section 7(1). If unanswered, First Appeal opens.",
       status: "pending",
-      day: "Day 30",
+      day: t("day30"),
     },
     {
-      title: "First Appeal Escalation Window Opens",
+      title: t("step_appeal_window"),
       desc: `If unfulfilled, file First Appeal under Section 19(1) to First Appellate Authority.`,
       status: "pending",
-      day: "Day 31–60",
+      day: t("day31_60"),
     },
   ];
 
@@ -62,12 +64,12 @@ export default function JourneyPage() {
             </div>
             <div>
               <p className="text-sm font-bold tracking-[0.16em] uppercase">RTI Saarthi</p>
-              <p className="text-xs text-[#173c38]/60">Citizen Intelligence &amp; RTI Filing Layer</p>
+              <p className="text-xs text-[#173c38]/60">{t("workflow_subtitle")}</p>
             </div>
           </Link>
           <div className="hidden items-center gap-2 text-xs font-semibold text-[#173c38]/60 sm:flex">
             <ShieldCheck size={16} />
-            Lifecycle Tracker
+            {t("lifecycle_tracker")}
           </div>
         </header>
 
@@ -75,16 +77,16 @@ export default function JourneyPage() {
         <section className="mx-auto flex w-full max-w-4xl flex-1 flex-col justify-center py-12 pb-28 lg:py-16 lg:pb-28">
           <div className="mb-4 flex items-center gap-2 text-sm font-semibold text-[#c45b35]">
             <Clock size={17} />
-            Screen 7 / Your RTI Journey &amp; Lifecycle
+            {t("screen7_badge")}
           </div>
 
           <h1 className="max-w-3xl text-4xl leading-[1.08] font-semibold tracking-[-0.035em] sm:text-6xl">
-            Track what happens next.
+            {t("journey_title")}
           </h1>
           <p className="mt-5 max-w-3xl text-lg leading-8 text-[#173c38]/70">
-            Illustrative lifecycle for this demo scenario submitted to {authority}.
+            {t("journey_desc")} {authority}.
           </p>
-          <h2 className="mt-2 text-xl font-bold">Submitted to {authority}</h2>
+          <h2 className="mt-2 text-xl font-bold">{t("submitted_to")} {authority}</h2>
 
           {/* Timeline Cards */}
           <div className="mt-10 space-y-4">
@@ -122,13 +124,13 @@ export default function JourneyPage() {
               href="/review"
               className="flex min-h-12 items-center justify-center rounded-xl border border-[#173c38]/20 bg-white px-6 py-3 text-sm font-bold transition hover:border-[#173c38]"
             >
-              Back to Review
+              {t("back_review")}
             </Link>
             <Link
               href="/appeal"
               className="flex min-h-12 items-center justify-center gap-2 rounded-xl bg-[#c45b35] px-8 py-3 text-sm font-bold text-white transition hover:bg-[#a94728]"
             >
-              View First Appeal Guidance <ArrowRight size={17} />
+              {t("view_appeal")} <ArrowRight size={17} />
             </Link>
           </div>
         </section>

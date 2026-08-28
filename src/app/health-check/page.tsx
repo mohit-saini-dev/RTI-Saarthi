@@ -13,8 +13,10 @@ import {
 } from "lucide-react";
 import { type RtiState } from "@/src/lib/types";
 import { readRtiState } from "@/src/lib/client-state";
+import { useLanguage } from "@/src/context/LanguageContext";
 
 export default function HealthCheckPage() {
+  const { t } = useLanguage();
   const [state, setState] = useState<RtiState | null>(null);
 
   useEffect(() => {
@@ -41,12 +43,12 @@ export default function HealthCheckPage() {
             </div>
             <div>
               <p className="text-sm font-bold tracking-[0.16em] uppercase">RTI Saarthi</p>
-              <p className="text-xs text-[#173c38]/60">Citizen Intelligence &amp; RTI Filing Layer</p>
+              <p className="text-xs text-[#173c38]/60">{t("workflow_subtitle")}</p>
             </div>
           </Link>
           <div className="hidden items-center gap-2 text-xs font-semibold text-[#173c38]/60 sm:flex">
             <ShieldCheck size={16} />
-            Deterministic Validation
+            {t("deterministic_validation")}
           </div>
         </header>
 
@@ -54,7 +56,7 @@ export default function HealthCheckPage() {
         <section className="mx-auto flex w-full max-w-4xl flex-1 flex-col justify-center py-12 lg:py-16">
           <div className="mb-4 flex items-center gap-2 text-sm font-semibold text-[#c45b35]">
             <ShieldCheck size={17} />
-            Screen 5 / Health check
+            {t("screen5_badge")}
           </div>
 
           <div className="flex flex-col justify-between gap-6 sm:flex-row sm:items-center">
@@ -62,18 +64,18 @@ export default function HealthCheckPage() {
               <h1 className="text-4xl leading-[1.08] font-semibold tracking-[-0.035em] sm:text-6xl">
                 {isCentral ? (
                   <>
-                    Ready for a clean <br className="hidden sm:inline" />filing.
+                    {t("health_ready_title")}
                   </>
                 ) : (
                   <>
-                    One check requires <br className="hidden sm:inline" />attention.
+                    {t("health_warning_title")}
                   </>
                 )}
               </h1>
               <p className="mt-4 max-w-xl text-base text-[#173c38]/70">
                 {isCentral
-                  ? "Deterministic rule engines verified that your request is focused, answerable, and ready for central portal submission."
-                  : "Deterministic rule engines detected a portal routing issue. Review the jurisdiction notice below before proceeding."}
+                  ? t("health_ready_desc")
+                  : t("health_warning_desc")}
               </p>
             </div>
 
@@ -85,7 +87,7 @@ export default function HealthCheckPage() {
             >
               <span className="text-3xl font-extrabold leading-none">{healthScore}</span>
               <span className="mt-1 text-[10px] font-semibold tracking-wider text-[#f5f1e8]/70 uppercase">
-                OUT OF 100
+                {t("out_of_100")}
               </span>
             </div>
           </div>
@@ -100,17 +102,17 @@ export default function HealthCheckPage() {
                 ) : (
                   <AlertTriangle className="text-[#c45b35]" size={18} />
                 )}
-                <span className="text-sm font-semibold text-[#173c38]">Authority Jurisdiction</span>
+                <span className="text-sm font-semibold text-[#173c38]">{t("authority_jurisdiction")}</span>
               </div>
               <div className="flex items-center gap-2">
                 <span className="text-xs font-bold text-[#173c38]/80">{jurisdiction}</span>
                 {isCentral ? (
                   <span className="rounded-md bg-[#e5eee4] px-2 py-0.5 text-xs font-bold text-[#27745e]">
-                    Central Portal Compatible (rtionline.gov.in)
+                    {t("central_compatible")}
                   </span>
                 ) : (
                   <span className="rounded-md bg-[#fbeae5] px-2 py-0.5 text-xs font-bold text-[#c45b35]">
-                    WARN
+                    {t("warn")}
                   </span>
                 )}
               </div>
@@ -120,12 +122,12 @@ export default function HealthCheckPage() {
             <div className="flex items-center justify-between border-b border-[#173c38]/10 py-3">
               <div className="flex items-center gap-3">
                 <CheckCircle2 className="text-[#27745e]" size={18} />
-                <span className="text-sm font-semibold text-[#173c38]">Request Type</span>
+                <span className="text-sm font-semibold text-[#173c38]">{t("request_type")}</span>
               </div>
               <div className="flex items-center gap-2">
-                <span className="text-xs font-bold text-[#173c38]/80">Records</span>
+                <span className="text-xs font-bold text-[#173c38]/80">{t("records")}</span>
                 <span className="rounded-md bg-[#e5eee4] px-2 py-0.5 text-xs font-bold text-[#27745e]">
-                  Passed
+                  {t("passed")}
                 </span>
               </div>
             </div>
@@ -134,12 +136,12 @@ export default function HealthCheckPage() {
             <div className="flex items-center justify-between border-b border-[#173c38]/10 py-3">
               <div className="flex items-center gap-3">
                 <CheckCircle2 className="text-[#27745e]" size={18} />
-                <span className="text-sm font-semibold text-[#173c38]">Specificity</span>
+                <span className="text-sm font-semibold text-[#173c38]">{t("specificity")}</span>
               </div>
               <div className="flex items-center gap-2">
-                <span className="text-xs font-bold text-[#173c38]/80">Clear</span>
+                <span className="text-xs font-bold text-[#173c38]/80">{t("clear")}</span>
                 <span className="rounded-md bg-[#e5eee4] px-2 py-0.5 text-xs font-bold text-[#27745e]">
-                  Passed
+                  {t("passed")}
                 </span>
               </div>
             </div>
@@ -148,12 +150,12 @@ export default function HealthCheckPage() {
             <div className="flex items-center justify-between border-b border-[#173c38]/10 py-3">
               <div className="flex items-center gap-3">
                 <CheckCircle2 className="text-[#27745e]" size={18} />
-                <span className="text-sm font-semibold text-[#173c38]">Privacy Guard</span>
+                <span className="text-sm font-semibold text-[#173c38]">{t("privacy_guard")}</span>
               </div>
               <div className="flex items-center gap-2">
-                <span className="text-xs font-bold text-[#27745e]">PASS</span>
+                <span className="text-xs font-bold text-[#27745e]">{t("pass")}</span>
                 <span className="rounded-md bg-[#e5eee4] px-2 py-0.5 text-[11px] font-semibold text-[#27745e]">
-                  No identity documents or sensitive IDs required
+                  {t("identity_docs")}
                 </span>
               </div>
             </div>
@@ -162,12 +164,12 @@ export default function HealthCheckPage() {
             <div className="flex items-center justify-between py-3">
               <div className="flex items-center gap-3">
                 <CheckCircle2 className="text-[#27745e]" size={18} />
-                <span className="text-sm font-semibold text-[#173c38]">Character Limit</span>
+                <span className="text-sm font-semibold text-[#173c38]">{t("character_limit")}</span>
               </div>
               <div className="flex items-center gap-2">
                 <span className="text-xs font-medium text-[#173c38]/70">{charCount} / 3000</span>
                 <span className="rounded-md bg-[#e5eee4] px-2 py-0.5 text-xs font-bold text-[#27745e]">
-                  Passed
+                  {t("passed")}
                 </span>
               </div>
             </div>
@@ -178,7 +180,7 @@ export default function HealthCheckPage() {
             <div className="mt-4 flex items-start gap-3 rounded-xl border border-[#c45b35]/30 bg-[#fef5f2] p-4 text-xs leading-relaxed text-[#c45b35]">
               <ShieldAlert size={18} className="shrink-0 mt-0.5" />
               <div>
-                <strong className="font-bold">Jurisdiction Shield Warning:</strong> This request falls under a <strong>{jurisdiction}</strong> authority. The Central RTI Online portal (`rtionline.gov.in`) only accepts Central Government departments. File this application via the state portal or by physical post.
+                <strong className="font-bold">{t("jurisdiction_warning")}:</strong> {t("jurisdiction_warning_desc")} <strong>{jurisdiction}</strong>.
               </div>
             </div>
           )}
@@ -189,13 +191,13 @@ export default function HealthCheckPage() {
               href="/authority"
               className="flex min-h-12 items-center justify-center gap-2 rounded-xl border border-[#173c38]/20 bg-white px-6 py-3 text-sm font-bold transition hover:border-[#173c38]"
             >
-              <ArrowLeft size={16} /> Back to Authority
+              <ArrowLeft size={16} /> {t("back_authority")}
             </Link>
             <Link
               href="/review"
               className="flex min-h-12 items-center justify-center gap-2 rounded-xl bg-[#c45b35] px-8 py-3 text-sm font-bold text-white transition hover:bg-[#a94728]"
             >
-              Review &amp; submit <ArrowRight size={17} />
+              {t("review_submit")} <ArrowRight size={17} />
             </Link>
           </div>
         </section>
