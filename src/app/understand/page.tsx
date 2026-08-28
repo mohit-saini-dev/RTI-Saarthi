@@ -44,17 +44,17 @@ export default function UnderstandPage() {
 
           <div className="rounded-2xl border border-[#173c38]/10 bg-white p-6 shadow-sm">
             <p className="text-lg text-[#173c38]/80 italic">
-              &ldquo;{state?.question || "National merit scholarship disbursement delay & sanction order"}&rdquo;
+              &ldquo;{state?.question || t("default_question")}&rdquo;
             </p>
           </div>
 
           <h1 className="mt-8 text-4xl leading-[1.08] font-semibold tracking-[-0.035em] text-[#173c38] sm:text-6xl">
-            {state?.goal || "Obtain official scholarship sanction and disbursement records"}
+            {state?.goal || t("default_goal")}
           </h1>
 
           <p className="mt-6 text-lg leading-8 text-[#173c38]/70">
             {state?.suitabilityReason ||
-              "RTI can provide certified scholarship sanction, allocation, file noting, and disbursement records under Section 2(f)."}
+              t("default_reason")}
           </p>
 
           <div className="mt-10 grid gap-4 sm:grid-cols-2">

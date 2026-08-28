@@ -25,8 +25,9 @@ export default function HealthCheckPage() {
     setState(readRtiState());
   }, []);
 
-  const jurisdiction = state?.jurisdiction || "Central";
-  const isCentral = jurisdiction === "Central";
+  const jurisdictionCode = state?.jurisdiction || "Central";
+  const isCentral = jurisdictionCode === "Central";
+  const jurisdiction = jurisdictionCode === "State" ? t("state") : jurisdictionCode === "Municipal" ? t("municipal") : t("central");
   const charCount = state?.characterCount || 53;
 
   // Central scholarship demo passes; municipal custom queries retain the routing warning.

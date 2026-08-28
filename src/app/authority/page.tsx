@@ -60,17 +60,17 @@ export default function AuthorityPage() {
             </div>
 
             <h2 className="mt-4 text-2xl font-bold text-[#173c38]">
-              {state?.publicAuthority || "Ministry of Education / Department of Higher Education"}
+              {state?.publicAuthority || t("default_authority")}
             </h2>
 
             <p className="mt-3 text-sm text-[#173c38]/70">
-                {t("jurisdiction")}: <span className="font-semibold">{state?.jurisdiction || "Central"}</span>
+                {t("jurisdiction")}: <span className="font-semibold">{state?.jurisdiction === "State" ? t("state") : state?.jurisdiction === "Municipal" ? t("municipal") : t("central")}</span>
             </p>
 
             <div className="mt-6 border-t border-[#173c38]/10 pt-4">
               <p className="text-xs font-bold uppercase tracking-wider text-[#173c38]/50">{t("why_match")}</p>
               <p className="mt-1 text-sm text-[#173c38]/80">
-                {state?.suitabilityReason || "Central scholarship schemes and national education grants are administered directly under Ministry of Education public records (Section 2(f))."}
+                {state?.suitabilityReason || t("authority_reason")}
               </p>
             </div>
           </div>

@@ -18,17 +18,14 @@ export default function AppealPage() {
     setState(readRtiState());
   }, []);
 
-  const publicAuthority = state?.publicAuthority || "Ministry of Education / Department of Higher Education";
-  const question = state?.question || "National merit scholarship disbursement delay & sanction order";
+  const publicAuthority = state?.publicAuthority || t("default_authority");
+  const question = state?.question || t("default_question");
   const registrationNumber = state?.registrationNumber || "DEMO-RTI/2026/009142";
   const requests =
     state?.restructuredRequests && state.restructuredRequests.length > 0
       ? state.restructuredRequests
       : [
-          "Certified copy of the scholarship sanction order and release notification for FY 2025-26.",
-          "Official criteria and beneficiary disbursement list for National Merit Scholarship.",
-          "Certified file notings regarding fund allocation and disbursement timelines.",
-          "Name and designation of the Public Information Officer / Section Officer handling student scholarship disbursements.",
+          t("request_1"), t("request_2"), t("request_3"), t("request_4"),
         ];
 
     const appealDraft = `FORM OF FIRST APPEAL UNDER SECTION 19(1) OF THE RTI ACT, 2005 [DEMO PROTOTYPE]

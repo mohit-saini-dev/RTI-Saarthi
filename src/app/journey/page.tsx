@@ -17,37 +17,37 @@ export default function JourneyPage() {
     setState(readRtiState());
   }, []);
 
-  const authority = state?.publicAuthority || "Ministry of Education / Department of Higher Education";
+  const authority = state?.publicAuthority || t("default_authority");
   const registrationNumber = state?.registrationNumber || "DEMO-RTI/2026/009142";
 
   const steps = [
     {
       title: t("step_submitted"),
-      desc: `RTI filed with ${authority}. Registration: ${registrationNumber}.`,
+      desc: t("timeline_desc1").replace("{authority}", authority).replace("{registrationNumber}", registrationNumber),
       status: "completed",
       day: t("day0"),
     },
     {
       title: t("step_assigned"),
-      desc: `Assigned to Central PIO — ${authority} (No citizen action needed).`,
+      desc: t("timeline_desc2").replace("{authority}", authority),
       status: "completed",
       day: t("day3"),
     },
     {
       title: t("step_scrutiny"),
-      desc: "Section scrutiny and certified record retrieval under Section 2(f).",
+      desc: t("timeline_desc3"),
       status: "in_progress",
       day: t("day12"),
     },
     {
       title: t("step_response"),
-      desc: "Statutory response window expires under Section 7(1). If unanswered, First Appeal opens.",
+      desc: t("timeline_desc4"),
       status: "pending",
       day: t("day30"),
     },
     {
       title: t("step_appeal_window"),
-      desc: `If unfulfilled, file First Appeal under Section 19(1) to First Appellate Authority.`,
+      desc: t("timeline_desc5"),
       status: "pending",
       day: t("day31_60"),
     },

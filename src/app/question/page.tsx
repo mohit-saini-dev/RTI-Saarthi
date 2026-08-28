@@ -12,6 +12,7 @@ export default function QuestionPage() {
   const [isEditing, setIsEditing] = useState(false);
   const [state, setState] = useState<RtiState | null>(null);
   const [requests, setRequests] = useState<string[]>([]);
+  const defaultRequests = [t("request_1"), t("request_2"), t("request_3"), t("request_4")];
 
   useEffect(() => {
     const currentState = readRtiState();
@@ -64,7 +65,7 @@ export default function QuestionPage() {
           </p>
 
           <div className="mt-10 space-y-3">
-            {requests.map((request, index) => (
+            {(requests.length ? requests : defaultRequests).map((request, index) => (
               <div key={index} className="flex items-center gap-4 rounded-2xl border border-[#173c38]/10 bg-[#fffdf8] px-5 py-4 shadow-[0_12px_30px_rgba(23,60,56,0.06)]">
                 <span className="flex size-9 shrink-0 items-center justify-center rounded-full bg-[#e5eee4] text-sm font-bold text-[#27745e]">
                   {index + 1}

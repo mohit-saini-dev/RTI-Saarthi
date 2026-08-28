@@ -17,15 +17,12 @@ export default function ReviewPage() {
     setState(readRtiState());
   }, []);
 
-  const publicAuthority = state?.publicAuthority || "Ministry of Education / Department of Higher Education";
+  const publicAuthority = state?.publicAuthority || t("default_authority");
   const requests =
     state?.restructuredRequests && state.restructuredRequests.length > 0
       ? state.restructuredRequests
       : [
-          "Certified copy of the scholarship sanction order and release notification for FY 2025-26.",
-          "Official criteria and beneficiary disbursement list for National Merit Scholarship.",
-          "Certified file notings regarding fund allocation and disbursement timelines.",
-          "Name and designation of the Public Information Officer / Section Officer handling student scholarship disbursements.",
+          t("request_1"), t("request_2"), t("request_3"), t("request_4"),
         ];
 
   const handleDownloadApplication = () => {
