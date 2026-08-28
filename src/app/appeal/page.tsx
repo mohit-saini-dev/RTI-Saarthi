@@ -11,63 +11,60 @@ export default function AppealPage() {
   const [copied, setCopied] = useState(false);
 
   useEffect(() => {
+    // Hydrate browser-only localStorage state after the initial render.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setState(readRtiState());
   }, []);
 
-  const publicAuthority = state?.publicAuthority || "Designated Public Authority";
-  const question = state?.question || "Requested RTI Query";
+  const publicAuthority = state?.publicAuthority || "Ministry of Education / Department of Higher Education";
+  const question = state?.question || "National merit scholarship disbursement delay & sanction order";
   const requests =
     state?.restructuredRequests && state.restructuredRequests.length > 0
       ? state.restructuredRequests
       : [
-          "Certified copy of official permission/sanction orders.",
-          "Total official count and breakdown records.",
-          "Certified copy of execution and audit registers.",
-          "Inspection reports and contractor execution logs.",
+          "Certified copy of the scholarship sanction order and release notification for FY 2025-26.",
+          "Official criteria and beneficiary disbursement list for National Merit Scholarship.",
+          "Certified file notings regarding fund allocation and disbursement timelines.",
+          "Name and designation of the Public Information Officer / Section Officer handling student scholarship disbursements.",
         ];
 
-  const appealDraft = `FORM OF FIRST APPEAL UNDER SECTION 19(1) OF THE RTI ACT, 2005
-[DEMO / PROTOTYPE DRAFT — REVIEW DETAILS BEFORE SUBMITTING]
+    const appealDraft = `FIRST APPEAL UNDER SECTION 19(1) OF THE RIGHT TO INFORMATION ACT, 2005
 
-To,
-The First Appellate Authority (FAA),
-${publicAuthority}
+  To,
+  The First Appellate Authority (FAA), Department of Higher Education, Ministry of Education, New Delhi
 
-Subject: First Appeal under Section 19(1) of the RTI Act, 2005 against non-furnishing of information / unsatisfactory response.
+  Subject: First Appeal under Section 19(1) against non-receipt of information within 30 days under Section 7(1) of the RTI Act, 2005.
 
-Ref: Original RTI Application concerning "${question}"
-Demo Registration Reference: RTI/${new Date().getFullYear()}/009142
+  Reference: RTI application concerning "${question}"
+  Registration reference: RTI/${new Date().getFullYear()}/009142
 
-Respected Authority,
+  Respected Sir/Madam,
 
-1. Particulars of the Appellant:
-   Name: [Citizen / Appellant Name]
-   Address: [Postal Address for Communication]
-   Contact: [Email / Mobile Number]
+  I, [Appellant Name], resident of [Full Postal Address], submit this First Appeal under Section 19(1) of the Right to Information Act, 2005. I filed the above RTI application with the Central Public Information Officer of ${publicAuthority}, seeking the public records listed below.
 
-2. Particulars of the Central/State Public Information Officer (CPIO/SPIO):
-   Designation: Public Information Officer
-   Public Authority: ${publicAuthority}
+  The statutory period of 30 days prescribed under Section 7(1) has expired. I have not received the requested information, a decision refusing access, or any lawful communication explaining the delay. Accordingly, the information is deemed to have been refused for the purpose of this appeal. The requested material concerns existing public records within Section 2(f), including scholarship sanctions, allocation records, file notings, and disbursement records.
 
-3. Timeline & Brief Facts:
-   The appellant submitted an RTI request seeking public records. As the applicable response period (usually 30 days under Section 7(1)) has elapsed without complete records / response provided was unsatisfactory, this appeal is preferred.
+  Information requested:
+  ${requests.map((req, i) => `   ${i + 1}. ${req}`).join("\n")}
 
-4. Public Records Requested:
-${requests.map((req, i) => `   ${i + 1}. ${req}`).join("\n")}
+  PRAYER FOR RELIEF UNDER SECTION 19(1)
 
-5. Grounds for Appeal:
-   a) Non-receipt of requested information within the standard statutory period.
-   b) Information sought pertains to accessible public records under Section 2(f) not covered by Section 8 exemptions.
+  I respectfully request that the First Appellate Authority:
+  1. Admit and decide this appeal under Section 19(1);
+  2. Direct the CPIO to furnish complete, point-wise information and certified copies of the records requested above, without further delay; and
+  3. Where any information is denied, provide a point-wise speaking order citing the specific exemption and appellate remedy relied upon.
 
-6. Relief Sought:
-   The appellant requests the First Appellate Authority to direct the PIO to provide certified copies of all requested records without further delay.
+  I confirm that the facts stated above are true to the best of my knowledge. A copy of the original RTI application and proof of submission/receipt may be enclosed with this appeal.
 
-Place: _________________
-Date:  _________________
+  Place: ____________________
+  Date:  ____________________
 
-Yours faithfully,
+  Yours faithfully,
 
-(Appellant Signature)`;
+  [Appellant Name]
+  [Postal Address]
+  [Email / Mobile Number]
+  [Signature]`;
 
   const handleCopy = async () => {
     try {
@@ -87,6 +84,7 @@ Yours faithfully,
     document.body.appendChild(element);
     element.click();
     document.body.removeChild(element);
+    URL.revokeObjectURL(element.href);
   };
 
   return (

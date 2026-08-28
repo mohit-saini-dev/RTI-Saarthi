@@ -10,10 +10,12 @@ export default function JourneyPage() {
   const [state, setState] = useState<RtiState | null>(null);
 
   useEffect(() => {
+    // Hydrate browser-only localStorage state after the initial render.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setState(readRtiState());
   }, []);
 
-  const authority = state?.publicAuthority || "Designated Public Authority";
+  const authority = state?.publicAuthority || "Ministry of Education / Department of Higher Education";
   const year = new Date().getFullYear();
 
   const steps = [
@@ -25,19 +27,19 @@ export default function JourneyPage() {
     },
     {
       title: "Assigned to Central/State PIO",
-      desc: `Designated Public Information Officer acknowledged application.`,
+      desc: "Request acknowledged by Central PIO. No citizen action needed.",
       status: "completed",
       day: "Day 3",
     },
     {
       title: "Internal Section Scrutiny & Record Retrieval",
-      desc: `Request mapped to custodian officers for record compilation under Section 2(f).`,
+      desc: "Section scrutiny and certified record retrieval under Section 2(f).",
       status: "in_progress",
       day: "Day 12",
     },
     {
       title: "Statutory Response Window Closes",
-      desc: `Mandated 30-day response window under Section 7(1) expires.`,
+      desc: "Statutory response window expires under Section 7(1). If unanswered, First Appeal opens.",
       status: "pending",
       day: "Day 30",
     },
@@ -80,8 +82,9 @@ export default function JourneyPage() {
             Track what happens next.
           </h1>
           <p className="mt-5 max-w-3xl text-lg leading-8 text-[#173c38]/70">
-            Here is the realistic lifecycle of your application submitted to <strong>{authority}</strong>.
+            Here is the realistic lifecycle of your application.
           </p>
+          <h2 className="mt-2 text-xl font-bold">Submitted to {authority}</h2>
 
           {/* Timeline Cards */}
           <div className="mt-10 space-y-4">

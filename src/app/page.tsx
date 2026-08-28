@@ -20,7 +20,7 @@ function validateQuestion(question: string) {
 }
 
 export default function Home() {
-  const [question, setQuestion] = useState("");
+  const [question, setQuestion] = useState("National merit scholarship disbursement delay & sanction order");
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const validation = validateQuestion(question);
   const router = useRouter();
@@ -62,7 +62,7 @@ export default function Home() {
               <label htmlFor="question" className="mb-3 block text-sm font-bold">{t("input_label")}</label>
               <div className="rounded-2xl border border-[#173c38]/20 bg-white p-2 shadow-[0_18px_45px_rgba(23,60,56,0.08)] focus-within:border-[#c45b35] focus-within:ring-4 focus-within:ring-[#c45b35]/10">
                 <textarea id="question" value={question} onChange={(event) => setQuestion(event.target.value)} placeholder={t("placeholder")} rows={3} className="w-full resize-none bg-transparent px-4 py-3 text-base leading-7 outline-none placeholder:text-[#173c38]/35" />
-                <div className="flex items-center justify-between border-t border-[#173c38]/10 px-3 pt-3"><span className="text-xs text-[#173c38]/45">{question.length}/240</span><button type="button" disabled={!validation.isValid || isAnalyzing} onClick={continueToUnderstand} className="flex items-center gap-2 rounded-xl bg-[#c45b35] px-4 py-2.5 text-sm font-bold text-white transition hover:bg-[#a94728] disabled:cursor-not-allowed disabled:opacity-40">{isAnalyzing ? <><LoaderCircle className="animate-spin" size={16} /> {t("btn_analyze")}</> : <>{t("btn_continue")} <ArrowRight size={16} /></>}</button></div>
+                <div className="flex items-center justify-between border-t border-[#173c38]/10 px-3 pt-3"><span className="text-xs text-[#173c38]/45">{question.length} / 3000 characters</span><button type="button" disabled={!validation.isValid || isAnalyzing} onClick={continueToUnderstand} className="flex items-center gap-2 rounded-xl bg-[#c45b35] px-4 py-2.5 text-sm font-bold text-white transition hover:bg-[#a94728] disabled:cursor-not-allowed disabled:opacity-40">{isAnalyzing ? <><LoaderCircle className="animate-spin" size={16} /> {t("btn_analyze")}</> : <>{t("btn_continue")} <ArrowRight size={16} /></>}</button></div>
               </div>
               <div className="mt-4 flex items-start gap-2.5 rounded-xl bg-[#e5eee4] px-4 py-3 text-sm">{validation.isValid ? <CheckCircle2 className="mt-0.5 shrink-0 text-[#27745e]" size={17} /> : <ShieldCheck className="mt-0.5 shrink-0 text-[#c45b35]" size={17} />}<div><p className="font-bold">{t(validation.label)}</p><p className="mt-0.5 leading-5 text-[#173c38]/65">{t(validation.detail)}</p></div></div>
             </div>

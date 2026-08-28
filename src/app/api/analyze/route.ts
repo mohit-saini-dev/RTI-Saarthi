@@ -48,6 +48,27 @@ function offlineState(query: string): RtiState {
     };
   }
 
+  if (normalizedQuery.match(/scholarship|merit|sanction order|disbursement|student grant/)) {
+    return {
+      ...defaultUniversalState,
+      question: query.trim(),
+      domain: "scholarship",
+      goal: "Obtain official scholarship sanction and disbursement records",
+      publicAuthority: "Ministry of Education / Department of Higher Education",
+      jurisdiction: "Central",
+      suitabilityReason: "Central scholarship schemes and national education grants are administered directly under Ministry of Education public records (Section 2(f)).",
+      restructuredRequests: [
+        "Certified copy of the scholarship sanction order and release notification for FY 2025-26.",
+        "Official criteria and beneficiary disbursement list for National Merit Scholarship.",
+        "Certified file notings regarding fund allocation and disbursement timelines.",
+        "Name and designation of the Public Information Officer / Section Officer handling student scholarship disbursements.",
+      ],
+      authorityConfidence: 96,
+      healthScore: 94,
+      characterCount: query.length,
+    };
+  }
+
   return {
     ...defaultUniversalState,
     question: query.trim() || defaultUniversalState.question,

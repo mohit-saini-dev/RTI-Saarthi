@@ -10,6 +10,8 @@ export default function UnderstandPage() {
   const [state, setState] = useState<RtiState | null>(null);
 
   useEffect(() => {
+    // Hydrate browser-only localStorage state after the initial render.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setState(readRtiState());
   }, []);
 
@@ -75,7 +77,7 @@ export default function UnderstandPage() {
                 <span className="text-xs font-bold uppercase tracking-wider text-[#27745e]">Resolution Route</span>
                 <h3 className="mt-2 text-xl font-bold">File a Grievance</h3>
                 <p className="mt-2 text-sm text-[#173c38]/70">
-                  Submit a complaint to executive vigilance if seeking direct action or stoppage.
+                  Report service delays or administrative non-action directly to CPGRAMS for executive resolution.
                 </p>
               </div>
               <a

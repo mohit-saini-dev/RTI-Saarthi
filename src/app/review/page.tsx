@@ -10,18 +10,20 @@ export default function ReviewPage() {
   const [state, setState] = useState<RtiState | null>(null);
 
   useEffect(() => {
+    // Hydrate browser-only localStorage state after the initial render.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setState(readRtiState());
   }, []);
 
-  const publicAuthority = state?.publicAuthority || "Department of Forests & Wildlife";
+  const publicAuthority = state?.publicAuthority || "Ministry of Education / Department of Higher Education";
   const requests =
     state?.restructuredRequests && state.restructuredRequests.length > 0
       ? state.restructuredRequests
       : [
-          "Certified copy of official permission/sanction orders issued during 2023.",
-          "Total official count and breakdown records maintained by the authority.",
-          "Certified copy of execution registers and audit logs.",
-          "Inspection reports and contractor execution logs.",
+          "Certified copy of the scholarship sanction order and release notification for FY 2025-26.",
+          "Official criteria and beneficiary disbursement list for National Merit Scholarship.",
+          "Certified file notings regarding fund allocation and disbursement timelines.",
+          "Name and designation of the Public Information Officer / Section Officer handling student scholarship disbursements.",
         ];
 
   const handleDownloadApplication = () => {
@@ -49,6 +51,7 @@ Date: ${new Date().toLocaleDateString()}
     document.body.appendChild(element);
     element.click();
     document.body.removeChild(element);
+    URL.revokeObjectURL(element.href);
   };
 
   return (

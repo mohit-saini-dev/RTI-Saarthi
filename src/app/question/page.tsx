@@ -13,6 +13,8 @@ export default function QuestionPage() {
 
   useEffect(() => {
     const currentState = readRtiState();
+    // Hydrate browser-only localStorage state after the initial render.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setState(currentState);
     if (currentState?.restructuredRequests?.length) {
       setRequests(currentState.restructuredRequests);
