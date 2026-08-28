@@ -2,7 +2,7 @@
 
 import { ChevronDown, MessageCircle, Search, X } from "lucide-react";
 import { useState } from "react";
-import { useLanguage } from "@/src/context/LanguageContext";
+import { useLanguage } from "../context/LanguageContext";
 
 const faqs = [
   { question: "What is the difference between RTI and a grievance (CPGRAMS)?", answer: "RTI obtains existing records and information. A grievance portal such as CPGRAMS is for requesting action or resolving a service problem, such as a delayed payment." },

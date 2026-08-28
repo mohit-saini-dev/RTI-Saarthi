@@ -493,7 +493,7 @@ import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import GovernmentBanner from "@/src/components/GovernmentBanner";
 import FaqAssistant from "@/src/components/FaqAssistant";
-import { LanguageProvider } from "@/src/context/LanguageContext";
+import { LanguageProvider } from "@/context/LanguageContext";
 
 const geistSans = Geist({ variable: "--font-geist-sans", subsets: ["latin"] });
 const geistMono = Geist_Mono({ variable: "--font-geist-mono", subsets: ["latin"] });
@@ -519,7 +519,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
 import { useState } from "react";
 import { ArrowRight, CheckCircle2, ClipboardList, LoaderCircle, ShieldCheck, Sparkles } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { useLanguage } from "@/src/context/LanguageContext";
+import { useLanguage } from "@/context/LanguageContext";
 
 const sampleQuestionKeys = ["sample_chip_road", "sample_chip_pension", "sample_chip_scholarship", "sample_chip_water"] as const;
 
@@ -598,7 +598,7 @@ export default function Home() {
 
 import { ChevronDown, MessageCircle, Search, X } from "lucide-react";
 import { useState } from "react";
-import { useLanguage } from "@/src/context/LanguageContext";
+import { useLanguage } from "@/context/LanguageContext";
 
 const faqs = [
   { question: "What is the difference between RTI and a grievance (CPGRAMS)?", answer: "RTI obtains existing records and information. A grievance portal such as CPGRAMS is for requesting action or resolving a service problem, such as a delayed payment." },
@@ -630,7 +630,7 @@ export default function FaqAssistant() {
 import { Info, X } from "lucide-react";
 import Link from "next/link";
 import { useState } from "react";
-import { useLanguage, type LanguageCode } from "@/src/context/LanguageContext";
+import { useLanguage, type LanguageCode } from "@/context/LanguageContext";
 
 const languages: { code: LanguageCode; label: string }[] = [
   { code: "en", label: "English" }, { code: "hi", label: "à¤¹à¤¿à¤¨à¥à¤¦à¥€ (Hindi)" }, { code: "bn", label: "à¦¬à¦¾à¦‚à¦²à¦¾ (Bengali)" }, { code: "te", label: "à°¤à±†à°²à±à°—à± (Telugu)" }, { code: "mr", label: "à¤®à¤°à¤¾à¤ à¥€ (Marathi)" }, { code: "ta", label: "à®¤à®®à®¿à®´à¯ (Tamil)" }, { code: "gu", label: "àª—à«àªœàª°àª¾àª¤à«€ (Gujarati)" }, { code: "kn", label: "à²•à²¨à³à²¨à²¡ (Kannada)" }, { code: "ml", label: "à´®à´²à´¯à´¾à´³à´‚ (Malayalam)" }, { code: "pa", label: "à¨ªà©°à¨œà¨¾à¨¬à©€ (Punjabi)" },

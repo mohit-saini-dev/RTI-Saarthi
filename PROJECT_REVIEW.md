@@ -358,7 +358,7 @@ File: `src/app/page.tsx`
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { useLanguage } from "@/src/context/LanguageContext";
+import { useLanguage } from "@/context/LanguageContext";
 
 const sampleQuestionKeys = [
   "sample_chip_road",

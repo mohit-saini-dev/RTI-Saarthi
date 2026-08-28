@@ -5,7 +5,7 @@ import Link from "next/link";
 import { ArrowLeft, ArrowRight, ClipboardList, Download, ShieldCheck } from "lucide-react";
 import { type RtiState } from "@/src/lib/types";
 import { readRtiState } from "@/src/lib/client-state";
-import { useLanguage } from "@/src/context/LanguageContext";
+import { useLanguage } from "../../context/LanguageContext";
 
 export default function ReviewPage() {
   const { t } = useLanguage();

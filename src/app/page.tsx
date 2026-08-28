@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { ArrowRight, CheckCircle2, ClipboardList, LoaderCircle, ShieldCheck, Sparkles } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { getSampleQuestion, useLanguage } from "@/src/context/LanguageContext";
+import { getSampleQuestion, useLanguage } from "../context/LanguageContext";
 
 const sampleQuestionKeys = ["sample_chip_road", "sample_chip_pension", "sample_chip_scholarship", "sample_chip_water"] as const;
 

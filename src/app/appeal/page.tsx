@@ -5,7 +5,7 @@ import Link from "next/link";
 import { ArrowLeft, Check, ClipboardList, Copy, Download, ShieldAlert, ShieldCheck } from "lucide-react";
 import { type RtiState } from "@/src/lib/types";
 import { readRtiState } from "@/src/lib/client-state";
-import { useLanguage } from "@/src/context/LanguageContext";
+import { useLanguage } from "../../context/LanguageContext";
 
 export default function AppealPage() {
   const { t } = useLanguage();

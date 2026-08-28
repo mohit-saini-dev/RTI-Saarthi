@@ -3,7 +3,7 @@
 import { Info, X } from "lucide-react";
 import Link from "next/link";
 import { useState } from "react";
-import { useLanguage, type LanguageCode } from "@/src/context/LanguageContext";
+import { useLanguage, type LanguageCode } from "../context/LanguageContext";
 
 const languages: { code: LanguageCode; label: string }[] = [
   { code: "en", label: "English" }, { code: "hi", label: "हिन्दी (Hindi)" }, { code: "bn", label: "বাংলা (Bengali)" }, { code: "te", label: "తెలుగు (Telugu)" }, { code: "mr", label: "मराठी (Marathi)" }, { code: "ta", label: "தமிழ் (Tamil)" }, { code: "gu", label: "ગુજરાતી (Gujarati)" }, { code: "kn", label: "ಕನ್ನಡ (Kannada)" }, { code: "ml", label: "മലയാളം (Malayalam)" }, { code: "pa", label: "ਪੰਜਾਬੀ (Punjabi)" },
