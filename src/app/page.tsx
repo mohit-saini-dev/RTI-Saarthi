@@ -20,7 +20,7 @@ function validateQuestion(question: string) {
 }
 
 export default function Home() {
-  const [question, setQuestion] = useState("National merit scholarship disbursement delay & sanction order");
+  const [question, setQuestion] = useState("");
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const validation = validateQuestion(question);
   const router = useRouter();
