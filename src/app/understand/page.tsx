@@ -61,7 +61,7 @@ export default function UnderstandPage() {
                 <span className="text-xs font-bold uppercase tracking-wider text-[#c45b35]">Information Route</span>
                 <h3 className="mt-2 text-xl font-bold">Find out what happened</h3>
                 <p className="mt-2 text-sm text-[#173c38]/70">
-                  Use RTI to request official scholarship files, sanction orders, and disbursement records.
+                  Use RTI to request official files, sanction orders, and related records for this topic.
                 </p>
               </div>
               <Link
@@ -77,7 +77,7 @@ export default function UnderstandPage() {
                 <span className="text-xs font-bold uppercase tracking-wider text-[#27745e]">Resolution Route</span>
                 <h3 className="mt-2 text-xl font-bold">File a Grievance</h3>
                 <p className="mt-2 text-sm text-[#173c38]/70">
-                  Report service delays or administrative non-action directly to CPGRAMS for executive resolution.
+                  Report service delays or non-action directly to CPGRAMS for executive resolution.
                 </p>
               </div>
               <a

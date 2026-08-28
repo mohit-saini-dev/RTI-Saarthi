@@ -32,7 +32,7 @@ export default function AppealPage() {
     const appealDraft = `FORM OF FIRST APPEAL UNDER SECTION 19(1) OF THE RTI ACT, 2005 [DEMO PROTOTYPE]
 
   To,
-  The First Appellate Authority (FAA), Department of Higher Education, Ministry of Education, New Delhi
+  The First Appellate Authority (FAA), ${publicAuthority}
 
   Subject: First Appeal under Section 19(1) against non-receipt of information within 30 days under Section 7(1) of the RTI Act, 2005.
 
@@ -109,7 +109,7 @@ export default function AppealPage() {
         </header>
 
         {/* Content */}
-        <section className="mx-auto flex w-full max-w-4xl flex-1 flex-col justify-center py-12 lg:py-16">
+        <section className="mx-auto flex w-full max-w-4xl flex-1 flex-col justify-center py-12 pb-28 lg:py-16 lg:pb-28">
           <div className="mb-4 flex items-center gap-2 text-sm font-semibold text-[#c45b35]">
             <ShieldAlert size={17} />
             Screen 8 / Appeal guidance &amp; escalation

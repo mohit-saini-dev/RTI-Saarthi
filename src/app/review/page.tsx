@@ -75,7 +75,7 @@ Date: ${new Date().toLocaleDateString()}
         </header>
 
         {/* Content */}
-        <section className="mx-auto flex w-full max-w-4xl flex-1 flex-col justify-center py-12 lg:py-16">
+        <section className="mx-auto flex w-full max-w-4xl flex-1 flex-col justify-center py-12 pb-28 lg:py-16 lg:pb-28">
           <div className="mb-4 flex items-center gap-2 text-sm font-semibold text-[#c45b35]">
             <ShieldCheck size={17} />
             Screen 6 / Review &amp; submit

@@ -48,7 +48,7 @@ function offlineState(query: string): RtiState {
     };
   }
 
-  if (normalizedQuery.match(/scholarship|merit|sanction order|disbursement|student grant/)) {
+  if (normalizedQuery.match(/scholarship|merit|sanction order|disbursement|student grant|छात्रवृत्ति|वजीफा|बृत्|বৃত্তি|উপবৃত্তি|உதவித்தொகை|ஸ்காலர்ஷிப்|స్కాలర్|విద్యార్థి వేతనం|शिष्यवृत्ती|શિષ્યવૃત્તિ|ವಿದ್ಯಾರ್ಥಿವೇತನ|സ്കോളർഷിപ്പ്|ਵਜ਼ੀਫ਼ਾ/)) {
     return {
       ...defaultUniversalState,
       question: query.trim(),
@@ -131,7 +131,7 @@ export async function POST(request: Request) {
       baseURL: "https://api.groq.com/openai/v1",
     });
 
-    const systemPrompt = `You are a careful Indian RTI (Right to Information Act, 2005) analyzer. 
+    const systemPrompt = `You are a careful Indian RTI (Right to Information Act, 2005) analyzer. Understand queries written in English, Hindi, Bengali, Tamil, Telugu, Marathi, Gujarati, Kannada, Malayalam, Punjabi, or mixed scripts. Preserve the user's meaning and return the JSON schema below with no empty fields.
 Return ONLY a valid JSON object matching this schema:
 {
   "domain": "infrastructure" | "pension" | "scholarship" | "civic" | "general",

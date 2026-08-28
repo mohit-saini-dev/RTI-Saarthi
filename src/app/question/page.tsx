@@ -58,7 +58,7 @@ export default function QuestionPage() {
             Structured requests for existing public records under Section 2(f):
           </h1>
           <p className="mt-7 max-w-3xl text-lg leading-8 text-[#173c38]/70">
-            These four requests turn the scholarship query into specific, tangible records that can be sought under the RTI Act.
+            These four requests turn your inquiry into specific, tangible records that can be sought under Section 2(f).
           </p>
 
           <div className="mt-10 space-y-3">

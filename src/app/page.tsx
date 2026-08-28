@@ -1,18 +1,16 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { ArrowRight, CheckCircle2, ClipboardList, LoaderCircle, ShieldCheck, Sparkles } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { useLanguage } from "@/src/context/LanguageContext";
+import { getSampleQuestion, useLanguage } from "@/src/context/LanguageContext";
 
 const sampleQuestionKeys = ["sample_chip_road", "sample_chip_pension", "sample_chip_scholarship", "sample_chip_water"] as const;
 
 function validateQuestion(question: string) {
-  const normalizedQuestion = question.trim().toLowerCase();
-  const hasPublicRecordsTopic = /pension|retir|document|service|record|pay|road|tender|scholarship|water|pipeline|report|order|status|department/.test(normalizedQuestion);
-  const hasQuestionShape = normalizedQuestion.length >= 12;
+  const hasQuestionShape = question.trim().length >= 12;
 
-  if (hasPublicRecordsTopic && hasQuestionShape) {
+  if (hasQuestionShape) {
     return { isValid: true, label: "question_clear" as const, detail: "validation_clear_detail" as const };
   }
 
@@ -24,7 +22,20 @@ export default function Home() {
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const validation = validateQuestion(question);
   const router = useRouter();
-  const { t } = useLanguage();
+  const { language, t } = useLanguage();
+
+  useEffect(() => {
+    const languageCodes = ["en", "hi", "bn", "te", "mr", "ta", "gu", "kn", "ml", "pa"] as const;
+    const matchingSampleKey = sampleQuestionKeys.find((sampleQuestionKey) =>
+      languageCodes.some((languageCode) => question.trim() === getSampleQuestion(languageCode, sampleQuestionKey))
+    );
+
+    if (matchingSampleKey) {
+      // Keep a selected sample aligned with the newly selected language.
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      setQuestion(getSampleQuestion(language, matchingSampleKey));
+    }
+  }, [language, question]);
 
   async function continueToUnderstand() {
     if (!validation.isValid || isAnalyzing) return;

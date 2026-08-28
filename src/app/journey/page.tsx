@@ -27,7 +27,7 @@ export default function JourneyPage() {
     },
     {
       title: "Assigned to Central/State PIO",
-      desc: "Assigned to Central PIO — Ministry of Education (No citizen action needed).",
+      desc: `Assigned to Central PIO — ${authority} (No citizen action needed).`,
       status: "completed",
       day: "Day 3",
     },
@@ -72,7 +72,7 @@ export default function JourneyPage() {
         </header>
 
         {/* Content */}
-        <section className="mx-auto flex w-full max-w-4xl flex-1 flex-col justify-center py-12 lg:py-16">
+        <section className="mx-auto flex w-full max-w-4xl flex-1 flex-col justify-center py-12 pb-28 lg:py-16 lg:pb-28">
           <div className="mb-4 flex items-center gap-2 text-sm font-semibold text-[#c45b35]">
             <Clock size={17} />
             Screen 7 / Your RTI Journey &amp; Lifecycle
@@ -82,7 +82,7 @@ export default function JourneyPage() {
             Track what happens next.
           </h1>
           <p className="mt-5 max-w-3xl text-lg leading-8 text-[#173c38]/70">
-            Illustrative lifecycle for this demo scenario submitted to Ministry of Education / Department of Higher Education.
+            Illustrative lifecycle for this demo scenario submitted to {authority}.
           </p>
           <h2 className="mt-2 text-xl font-bold">Submitted to {authority}</h2>
 
