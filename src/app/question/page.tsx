@@ -55,18 +55,10 @@ export default function QuestionPage() {
             Screen 3 / Sahi Sawal
           </div>
           <h1 className="max-w-3xl text-4xl leading-[1.05] font-semibold tracking-[-0.035em] sm:text-6xl">
-            Ask for records, not explanations.
+            Structured requests for existing public records under Section 2(f):
           </h1>
           <p className="mt-7 max-w-3xl text-lg leading-8 text-[#173c38]/70">
-            {state?.question ? (
-              <>
-                Citizens often ask broad questions like &ldquo;{state.question}&rdquo;. RTI works best when restructured into specific, tangible public record requests:
-              </>
-            ) : (
-              <>
-                RTI works best with specific record requests. Here is what you can actually ask for:
-              </>
-            )}
+            These four requests turn the scholarship query into specific, tangible records that can be sought under the RTI Act.
           </p>
 
           <div className="mt-10 space-y-3">

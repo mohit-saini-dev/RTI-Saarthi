@@ -16,18 +16,18 @@ export default function JourneyPage() {
   }, []);
 
   const authority = state?.publicAuthority || "Ministry of Education / Department of Higher Education";
-  const year = new Date().getFullYear();
+  const registrationNumber = state?.registrationNumber || "DEMO-RTI/2026/009142";
 
   const steps = [
     {
       title: "Application Submitted & Registered",
-      desc: `RTI filed with ${authority}. Registration: RTI/${year}/009142.`,
+      desc: `RTI filed with ${authority}. Registration: ${registrationNumber}.`,
       status: "completed",
       day: "Day 0",
     },
     {
       title: "Assigned to Central/State PIO",
-      desc: "Request acknowledged by Central PIO. No citizen action needed.",
+      desc: "Assigned to Central PIO — Ministry of Education (No citizen action needed).",
       status: "completed",
       day: "Day 3",
     },
@@ -82,7 +82,7 @@ export default function JourneyPage() {
             Track what happens next.
           </h1>
           <p className="mt-5 max-w-3xl text-lg leading-8 text-[#173c38]/70">
-            Here is the realistic lifecycle of your application.
+            Illustrative lifecycle for this demo scenario submitted to Ministry of Education / Department of Higher Education.
           </p>
           <h2 className="mt-2 text-xl font-bold">Submitted to {authority}</h2>
 

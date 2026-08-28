@@ -42,17 +42,17 @@ export default function UnderstandPage() {
 
           <div className="rounded-2xl border border-[#173c38]/10 bg-white p-6 shadow-sm">
             <p className="text-lg text-[#173c38]/80 italic">
-              &ldquo;{state?.question || "How many trees did the forest department cut in 2023?"}&rdquo;
+              &ldquo;{state?.question || "National merit scholarship disbursement delay & sanction order"}&rdquo;
             </p>
           </div>
 
           <h1 className="mt-8 text-4xl leading-[1.08] font-semibold tracking-[-0.035em] text-[#173c38] sm:text-6xl">
-            {state?.goal || "Obtain official public records and sanction logs"}
+            {state?.goal || "Obtain official scholarship sanction and disbursement records"}
           </h1>
 
           <p className="mt-6 text-lg leading-8 text-[#173c38]/70">
             {state?.suitabilityReason ||
-              "RTI can provide certified copies of sanction orders, permissions, and audit registers under Section 2(f)."}
+              "RTI can provide certified scholarship sanction, allocation, file noting, and disbursement records under Section 2(f)."}
           </p>
 
           <div className="mt-10 grid gap-4 sm:grid-cols-2">
@@ -61,7 +61,7 @@ export default function UnderstandPage() {
                 <span className="text-xs font-bold uppercase tracking-wider text-[#c45b35]">Information Route</span>
                 <h3 className="mt-2 text-xl font-bold">Find out what happened</h3>
                 <p className="mt-2 text-sm text-[#173c38]/70">
-                  Use RTI to request official files, permits, cut counts, and expenditure records.
+                  Use RTI to request official scholarship files, sanction orders, and disbursement records.
                 </p>
               </div>
               <Link

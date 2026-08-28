@@ -53,7 +53,7 @@ export const initialRtiState: RtiState = {
   healthScore: 91,
   characterCount: 640,
   privacyGuard: "No identity documents or sensitive IDs required",
-  registrationNumber: "RTI-2026-000112",
+  registrationNumber: "DEMO-RTI/2026/009142",
   restructuredRequests: [
     "Copy of the sanction/release order for my pension",
     "Current status of my pension file",

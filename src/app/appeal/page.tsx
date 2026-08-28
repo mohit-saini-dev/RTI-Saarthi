@@ -18,6 +18,7 @@ export default function AppealPage() {
 
   const publicAuthority = state?.publicAuthority || "Ministry of Education / Department of Higher Education";
   const question = state?.question || "National merit scholarship disbursement delay & sanction order";
+  const registrationNumber = state?.registrationNumber || "DEMO-RTI/2026/009142";
   const requests =
     state?.restructuredRequests && state.restructuredRequests.length > 0
       ? state.restructuredRequests
@@ -28,7 +29,7 @@ export default function AppealPage() {
           "Name and designation of the Public Information Officer / Section Officer handling student scholarship disbursements.",
         ];
 
-    const appealDraft = `FIRST APPEAL UNDER SECTION 19(1) OF THE RIGHT TO INFORMATION ACT, 2005
+    const appealDraft = `FORM OF FIRST APPEAL UNDER SECTION 19(1) OF THE RTI ACT, 2005 [DEMO PROTOTYPE]
 
   To,
   The First Appellate Authority (FAA), Department of Higher Education, Ministry of Education, New Delhi
@@ -36,7 +37,7 @@ export default function AppealPage() {
   Subject: First Appeal under Section 19(1) against non-receipt of information within 30 days under Section 7(1) of the RTI Act, 2005.
 
   Reference: RTI application concerning "${question}"
-  Registration reference: RTI/${new Date().getFullYear()}/009142
+  Registration reference: ${registrationNumber}
 
   Respected Sir/Madam,
 
@@ -149,7 +150,7 @@ export default function AppealPage() {
             <div className="flex flex-wrap items-center justify-between gap-3 border-b border-[#173c38]/10 pb-4">
               <div>
                 <span className="text-sm font-bold text-[#173c38]">✓ AI-Assisted First Appeal Draft</span>
-                <p className="text-xs text-[#173c38]/60">Review all details before formal submission</p>
+                <p className="text-xs text-[#173c38]/60">Informational guidance under Section 19(1) — review all details before formal submission.</p>
               </div>
 
               <div className="flex items-center gap-2">
