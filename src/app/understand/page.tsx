@@ -12,12 +12,9 @@ export default function UnderstandPage() {
   const [state, setState] = useState<RtiState | null>(null);
 
   useEffect(() => {
-    // Hydrate browser-only localStorage state after initial render
-    // eslint-disable-next-line react-hooks/set-state-in-effect
     setState(readRtiState());
   }, []);
 
-  // Sourced dynamically from state; fallbacks remain domain-neutral
   const question =
     state?.question ||
     "Inquiry regarding public authority records and administrative files.";
@@ -33,7 +30,6 @@ export default function UnderstandPage() {
   return (
     <main className="min-h-screen bg-[#f5f1e8] text-[#173c38]">
       <div className="mx-auto flex min-h-screen w-full max-w-7xl flex-col px-6 py-6 sm:px-10 lg:px-12">
-        {/* Header */}
         <header className="flex items-center justify-between border-b border-[#173c38]/15 pb-5">
           <Link href="/" className="flex items-center gap-3">
             <div className="flex size-10 items-center justify-center rounded-xl bg-[#173c38] text-[#f5f1e8]">
@@ -50,15 +46,13 @@ export default function UnderstandPage() {
           </div>
         </header>
 
-        {/* Content Body */}
         <section className="mx-auto flex w-full max-w-4xl flex-1 flex-col justify-center py-12 pb-28">
-          {/* Badge */}
+          {/* Screen Number Badge */}
           <div className="mb-4 flex items-center gap-2 text-sm font-semibold text-[#c45b35]">
             <Sparkles size={16} />
-            <span>✦ AI-Reasoned Civic Intent</span>
+            <span>✦ Screen 2: Understand your goal</span>
           </div>
 
-          {/* User's Original Query Callout */}
           <div className="rounded-2xl border border-[#173c38]/10 bg-white p-6 shadow-sm">
             <span className="block text-[11px] font-bold uppercase tracking-wider text-[#173c38]/60 mb-1">
               Your Input Query
@@ -68,19 +62,15 @@ export default function UnderstandPage() {
             </p>
           </div>
 
-          {/* Dynamic Objective Heading */}
           <h1 className="mt-8 max-w-3xl text-3xl font-semibold leading-[1.15] tracking-[-0.035em] sm:text-4xl">
             {goal}
           </h1>
 
-          {/* Dynamic Reason */}
           <p className="mt-5 max-w-3xl text-base leading-relaxed text-[#173c38]/80 sm:text-lg">
             {suitabilityReason}
           </p>
 
-          {/* Action Pathways: RTI vs. Grievance Redress */}
           <div className="mt-10 grid gap-4 sm:grid-cols-2">
-            {/* Primary Action: Proceed with RTI Records Demand */}
             <div className="flex flex-col justify-between rounded-2xl border border-[#173c38]/15 bg-[#fffdf8] p-6 shadow-sm">
               <div>
                 <span className="text-xs font-bold tracking-wider text-[#c45b35] uppercase">
@@ -99,7 +89,6 @@ export default function UnderstandPage() {
               </Link>
             </div>
 
-            {/* Alternative Action: Administrative Grievance (CPGRAMS) */}
             <div className="flex flex-col justify-between rounded-2xl border border-[#173c38]/15 bg-[#fffdf8] p-6 shadow-sm">
               <div>
                 <span className="text-xs font-bold tracking-wider text-[#27745e] uppercase">

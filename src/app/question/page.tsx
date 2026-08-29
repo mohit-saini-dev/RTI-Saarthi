@@ -13,7 +13,7 @@ export default function QuestionPage() {
   const [state, setState] = useState<RtiState | null>(null);
   const [requests, setRequests] = useState<string[]>([]);
 
-  // Domain-neutral statutory fallbacks (no hardcoded scholarship or road text)
+  // Domain-neutral statutory fallbacks to prevent hardcoded demo leaks
   const neutralDefaultRequests = [
     "Certified true copies of administrative approvals, sanction orders, and file notings related to the stated project/matter.",
     "Authenticated statement of total budget allocated, funds released, and official utilization certificates submitted to date.",
@@ -22,7 +22,7 @@ export default function QuestionPage() {
   ];
 
   useEffect(() => {
-    // Hydrate browser-only localStorage state after the initial render.
+    // Hydrate browser-only localStorage state after initial render
     // eslint-disable-next-line react-hooks/set-state-in-effect
     const currentState = readRtiState();
     setState(currentState);
@@ -67,10 +67,10 @@ export default function QuestionPage() {
 
         {/* Content */}
         <section className="mx-auto flex w-full max-w-4xl flex-1 flex-col justify-center py-12 pb-28">
-          {/* AI Differentiation Badge */}
+          {/* Unified Screen Indicator Badge */}
           <div className="mb-4 flex items-center gap-2 text-sm font-semibold text-[#c45b35]">
             <Sparkles size={17} />
-            <span>✦ AI-Restructured Under Section 2(f)</span>
+            <span>✦ Screen 3: Sahi Sawal Engine (Section 2(f) Records)</span>
           </div>
 
           <h1 className="max-w-3xl text-4xl leading-[1.08] font-semibold tracking-[-0.035em] sm:text-5xl">
@@ -110,12 +110,12 @@ export default function QuestionPage() {
             ))}
           </div>
 
-          {/* Edit / Customize Bar */}
+          {/* Edit / Customization Bar */}
           <div className="mt-6 flex items-center justify-between rounded-xl border border-[#173c38]/10 bg-[#fffdf8] px-4 py-3 text-xs text-[#173c38]/70">
             <span>
               {isEditing
                 ? "Editing mode active: Make statutory adjustments as required."
-                : "PIOs reject general questions. These 4 queries explicitly demand certified material records under Section 2(f)."}
+                : "PIOs reject general questions. These queries explicitly demand certified material records under Section 2(f)."}
             </span>
             <button
               type="button"

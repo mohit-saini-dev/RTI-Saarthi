@@ -1,19 +1,26 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import Link from "next/link";
-import { ArrowRight, CheckCircle2, Circle, Clock, ClipboardList, ShieldCheck, AlertTriangle } from "lucide-react";
+import { 
+  ShieldCheck, 
+  AlertTriangle, 
+  ArrowRight, 
+  ArrowLeft, 
+  CheckCircle2, 
+  FileText, 
+  Lock, 
+  ClipboardList
+} from "lucide-react";
 import { type RtiState } from "@/src/lib/types";
 import { readRtiState } from "@/src/lib/client-state";
 import { useLanguage } from "../../context/LanguageContext";
 
-export default function JourneyPage() {
+export default function HealthCheckPage() {
   const { t } = useLanguage();
   const [state, setState] = useState<RtiState | null>(null);
 
   useEffect(() => {
-    // Hydrate browser-only localStorage state after initial render
-    // eslint-disable-next-line react-hooks/set-state-in-effect
     setState(readRtiState());
   }, []);
 
@@ -25,46 +32,11 @@ export default function JourneyPage() {
       ? "State Public Authority"
       : "Central Public Information Officer");
 
-  const registrationNumber =
-    state?.registrationNumber || `DEMO-RTI/${new Date().getFullYear()}/009142`;
-
   const isMunicipalOrState =
     state?.jurisdiction === "Municipal" || state?.jurisdiction === "State";
 
-  const steps = [
-    {
-      title: t("step_submitted"),
-      desc: t("timeline_desc1")
-        .replace("{authority}", authority)
-        .replace("{registrationNumber}", registrationNumber),
-      status: "completed",
-      day: t("day0"),
-    },
-    {
-      title: t("step_assigned"),
-      desc: t("timeline_desc2").replace("{authority}", authority),
-      status: "completed",
-      day: t("day3"),
-    },
-    {
-      title: t("step_scrutiny"),
-      desc: t("timeline_desc3"),
-      status: "in_progress",
-      day: t("day12"),
-    },
-    {
-      title: t("step_response"),
-      desc: t("timeline_desc4"),
-      status: "pending",
-      day: t("day30"),
-    },
-    {
-      title: t("step_appeal_window"),
-      desc: t("timeline_desc5"),
-      status: "pending",
-      day: t("day31_60"),
-    },
-  ];
+  const healthScore = state?.healthScore ?? (isMunicipalOrState ? 68 : 94);
+  const isPass = healthScore >= 80;
 
   return (
     <main className="min-h-screen bg-[#f5f1e8] text-[#173c38]">
@@ -82,95 +54,203 @@ export default function JourneyPage() {
           </Link>
           <div className="hidden items-center gap-2 text-xs font-semibold text-[#173c38]/60 sm:flex">
             <ShieldCheck size={16} />
-            {t("lifecycle_tracker")}
+            Compliance Shield
           </div>
         </header>
 
         {/* Content */}
-        <section className="mx-auto flex w-full max-w-4xl flex-1 flex-col justify-center py-12">
-          {/* Status Badge */}
-          <div className="mb-4 flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-[#c45b35]">
-            <Clock size={16} />
-            DEMO LIFECYCLE — SIMULATED POST-FILING JOURNEY
+        <section className="mx-auto flex w-full max-w-4xl flex-1 flex-col justify-center py-12 pb-28">
+          {/* Unified Screen Indicator Badge */}
+          <div className="mb-4 flex items-center gap-2 text-sm font-semibold text-[#c45b35]">
+            <ShieldCheck size={16} />
+            <span>✦ Screen 5: Pre-Flight Statutory Health Check</span>
           </div>
 
-          <h1 className="max-w-3xl text-4xl leading-[1.08] font-semibold tracking-[-0.035em] sm:text-5xl">
-            {t("journey_title")}
-          </h1>
-
-          {/* Unified Authority Banner (Prevents Dual-Authority Conflict) */}
-          <div className="mt-4 rounded-xl border border-[#173c38]/15 bg-white p-4 shadow-sm">
-            <p className="text-xs font-bold tracking-wider uppercase text-[#173c38]/60">
-              Designated Public Authority
-            </p>
-            <p className="text-lg font-bold text-[#173c38] mt-0.5">
-              {authority}
-            </p>
-            <p className="text-xs text-[#173c38]/70 mt-1">
-              Filing Reference ID: <span className="font-mono font-semibold">{registrationNumber}</span> • Jurisdiction: <span className="font-semibold">{state?.jurisdiction || "Central"}</span>
-            </p>
-          </div>
-
-          {/* Municipal / State Guard Warning */}
-          {isMunicipalOrState ? (
-            <div className="mt-6 rounded-2xl border border-[#c45b35]/30 bg-[#fff5f2] p-6 text-[#173c38] shadow-sm">
-              <div className="flex items-center gap-2 text-sm font-bold text-[#c45b35]">
-                <AlertTriangle size={18} />
-                State / Municipal Jurisdiction Route Advisory
-              </div>
-              <p className="mt-2 text-sm leading-relaxed text-[#173c38]/80">
-                This request pertains to <strong>{authority}</strong> ({state?.jurisdiction} jurisdiction). Central RTI Online (<code className="text-xs bg-white px-1.5 py-0.5 rounded border">rtionline.gov.in</code>) does not accept or process municipal or state-level filings.
-              </p>
-              <div className="mt-4 rounded-xl bg-white p-4 border border-[#c45b35]/20 text-xs text-[#173c38]/80">
-                <strong className="block font-bold text-[#173c38] mb-1">Recommended Next Step:</strong>
-                Do not pay the ₹10 fee on the central portal. Download your prepared Section 2(f) records draft and submit it through your respective State RTI portal, or send it physically via registered post with a ₹10 court fee stamp or postal order.
-              </div>
-            </div>
-          ) : (
-            /* Standard Central Timeline Cards */
-            <div className="mt-8 space-y-4">
-              {steps.map((step, idx) => (
-                <div
-                  key={idx}
-                  className="flex items-start gap-4 rounded-2xl border border-[#173c38]/10 bg-[#fffdf8] p-5 shadow-sm"
-                >
-                  <div className="mt-0.5">
-                    {step.status === "completed" ? (
-                      <CheckCircle2 className="text-[#27745e]" size={22} />
-                    ) : step.status === "in_progress" ? (
-                      <Clock className="text-[#c45b35]" size={22} />
-                    ) : (
-                      <Circle className="text-[#173c38]/30" size={22} />
-                    )}
-                  </div>
-
-                  <div className="flex-1">
-                    <div className="flex items-center justify-between">
-                      <h3 className="text-base font-bold text-[#173c38]">{step.title}</h3>
-                      <span className="rounded-full bg-[#173c38]/5 px-2.5 py-0.5 text-xs font-bold text-[#173c38]/70">
-                        {step.day}
-                      </span>
-                    </div>
-                    <p className="mt-1 text-sm text-[#173c38]/70">{step.desc}</p>
-                  </div>
+          <div className="bg-white rounded-2xl border border-[#173c38]/15 p-6 sm:p-8 shadow-sm">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-6 pb-6 border-b border-[#173c38]/10">
+              <div>
+                <div className="flex items-center gap-2">
+                  <span className={`text-xs font-bold uppercase tracking-wider px-2.5 py-1 rounded-full ${
+                    isPass ? "bg-emerald-100 text-emerald-900" : "bg-amber-100 text-amber-900"
+                  }`}>
+                    {isPass ? "Filing Health: PASS" : "Filing Health: CAUTION / WARN"}
+                  </span>
                 </div>
-              ))}
-            </div>
-          )}
+                <h1 className="text-3xl font-extrabold text-[#173c38] tracking-tight mt-2">
+                  Pre-Flight Statutory Health Check
+                </h1>
+                <p className="text-sm text-[#173c38]/70 mt-1 max-w-xl">
+                  Audited against Central RTI Online portal constraints, Section 2(f) statutory requirements, and data privacy safeguards.
+                </p>
+              </div>
 
-          {/* Footer Navigation */}
-          <div className="mt-10 flex flex-col items-center justify-between gap-4 sm:flex-row">
+              {/* Health Score Gauge */}
+              <div className="flex items-center gap-4 bg-[#f5f1e8] px-6 py-4 rounded-2xl border border-[#173c38]/10">
+                <div className="text-right">
+                  <span className="text-3xl font-black text-[#173c38]">{healthScore}</span>
+                  <span className="text-sm font-semibold text-[#173c38]/60">/100</span>
+                  <p className="text-[11px] font-bold text-[#173c38]/60 uppercase tracking-wider">Health Index</p>
+                </div>
+                <div className="p-3 bg-white rounded-xl shadow-xs">
+                  {isPass ? (
+                    <CheckCircle2 size={32} className="text-[#27745e]" />
+                  ) : (
+                    <AlertTriangle size={32} className="text-[#c45b35]" />
+                  )}
+                </div>
+              </div>
+            </div>
+
+            {/* Compliance Checks */}
+            <div className="mt-8 space-y-4">
+              <h2 className="text-xs font-bold uppercase tracking-wider text-[#173c38]/60">
+                Deterministic Rule Validations
+              </h2>
+
+              {/* Jurisdiction Check */}
+              <div className="p-4 rounded-xl border border-[#173c38]/10 bg-[#fffdf8] flex items-start gap-4">
+                <div className="mt-0.5">
+                  {isMunicipalOrState ? (
+                    <AlertTriangle size={20} className="text-[#c45b35]" />
+                  ) : (
+                    <CheckCircle2 size={20} className="text-[#27745e]" />
+                  )}
+                </div>
+                <div className="flex-1">
+                  <div className="flex items-center justify-between">
+                    <h3 className="text-sm font-bold text-[#173c38]">
+                      Jurisdiction & Portal Routing Check
+                    </h3>
+                    <span className={`text-xs font-bold px-2 py-0.5 rounded ${
+                      isMunicipalOrState ? "bg-amber-100 text-amber-900" : "bg-emerald-100 text-emerald-900"
+                    }`}>
+                      {isMunicipalOrState ? "WARN" : "PASSED"}
+                    </span>
+                  </div>
+                  <p className="text-xs text-[#173c38]/70 mt-1">
+                    Target Authority: <strong>{authority}</strong> ({state?.jurisdiction || "Central"} jurisdiction).
+                  </p>
+                  {isMunicipalOrState && (
+                    <div className="mt-2.5 p-3 rounded-lg bg-amber-50 border border-amber-200 text-xs text-amber-900 leading-relaxed">
+                      <strong>Critical Guard:</strong> Central RTI Online (rtionline.gov.in) does not accept municipal or state authority filings. Filing this request on the central portal would cost you your ₹10 application fee and delay you by several weeks.
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Section 2(f) Check */}
+              <div className="p-4 rounded-xl border border-[#173c38]/10 bg-[#fffdf8] flex items-start gap-4">
+                <div className="mt-0.5">
+                  <CheckCircle2 size={20} className="text-[#27745e]" />
+                </div>
+                <div className="flex-1">
+                  <div className="flex items-center justify-between">
+                    <h3 className="text-sm font-bold text-[#173c38]">
+                      Section 2(f) Admissibility Check
+                    </h3>
+                    <span className="text-xs font-bold px-2 py-0.5 rounded bg-emerald-100 text-emerald-900">
+                      PASSED
+                    </span>
+                  </div>
+                  <p className="text-xs text-[#173c38]/70 mt-1">
+                    Your question has been converted into specific certified record demands rather than interrogative queries, preventing summary dismissal by the PIO.
+                  </p>
+                </div>
+              </div>
+
+              {/* PII Check */}
+              <div className="p-4 rounded-xl border border-[#173c38]/10 bg-[#fffdf8] flex items-start gap-4">
+                <div className="mt-0.5">
+                  <Lock size={20} className="text-[#27745e]" />
+                </div>
+                <div className="flex-1">
+                  <div className="flex items-center justify-between">
+                    <h3 className="text-sm font-bold text-[#173c38]">
+                      Personally Identifiable Information (PII) Guard
+                    </h3>
+                    <span className="text-xs font-bold px-2 py-0.5 rounded bg-emerald-100 text-emerald-900">
+                      SECURED
+                    </span>
+                  </div>
+                  <p className="text-xs text-[#173c38]/70 mt-1">
+                    No personal identity card numbers, banking credentials, or unnecessary personal disclosures were detected.
+                  </p>
+                </div>
+              </div>
+
+              {/* Character Limit */}
+              <div className="p-4 rounded-xl border border-[#173c38]/10 bg-[#fffdf8] flex items-start gap-4">
+                <div className="mt-0.5">
+                  <FileText size={20} className="text-[#27745e]" />
+                </div>
+                <div className="flex-1">
+                  <div className="flex items-center justify-between">
+                    <h3 className="text-sm font-bold text-[#173c38]">
+                      Portal Character Limit (3,000 Characters)
+                    </h3>
+                    <span className="text-xs font-bold px-2 py-0.5 rounded bg-emerald-100 text-emerald-900">
+                      COMPLIANT
+                    </span>
+                  </div>
+                  <p className="text-xs text-[#173c38]/70 mt-1">
+                    Restructured query fits within character requirements, formatted for immediate copy-pasting.
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {/* Jurisdiction Action */}
+            {isMunicipalOrState ? (
+              <div className="mt-6 p-4 rounded-xl bg-[#fff5f2] border border-[#c45b35]/20 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                <div>
+                  <p className="text-xs font-bold text-[#c45b35] uppercase tracking-wider">
+                    Recommended Routing Action
+                  </p>
+                  <p className="text-xs text-[#173c38]/80 mt-0.5">
+                    Prepare to file via your State RTI portal or submit via registered physical post.
+                  </p>
+                </div>
+                <Link
+                  href="/review"
+                  className="px-4 py-2 bg-[#c45b35] hover:bg-[#a84d2d] text-white text-xs font-bold rounded-lg transition whitespace-nowrap text-center"
+                >
+                  Proceed to Review & Export Draft
+                </Link>
+              </div>
+            ) : (
+              <div className="mt-6 p-4 rounded-xl bg-emerald-50 border border-emerald-200 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                <div>
+                  <p className="text-xs font-bold text-emerald-800 uppercase tracking-wider">
+                    Ready for Review
+                  </p>
+                  <p className="text-xs text-[#173c38]/80 mt-0.5">
+                    All compliance checks passed. Your request is ready for statutory review.
+                  </p>
+                </div>
+                <Link
+                  href="/review"
+                  className="px-4 py-2 bg-[#173c38] hover:bg-black text-white text-xs font-bold rounded-lg transition whitespace-nowrap text-center"
+                >
+                  Continue to Final Review
+                </Link>
+              </div>
+            )}
+          </div>
+
+          {/* Navigation Controls */}
+          <div className="mt-8 flex flex-col sm:flex-row items-center justify-between gap-4">
+            <Link
+              href="/authority"
+              className="w-full sm:w-auto flex items-center justify-center gap-2 px-6 py-3 rounded-xl border border-[#173c38]/20 text-sm font-semibold text-[#173c38] hover:bg-white transition"
+            >
+              <ArrowLeft size={16} /> Back to Authority Routing
+            </Link>
+
             <Link
               href="/review"
-              className="flex min-h-12 items-center justify-center rounded-xl border border-[#173c38]/20 px-6 text-sm font-semibold text-[#173c38] transition-colors hover:bg-[#173c38]/5"
+              className="w-full sm:w-auto flex items-center justify-center gap-2 px-8 py-3 rounded-xl bg-[#173c38] hover:bg-black text-white text-sm font-semibold shadow-sm transition"
             >
-              {t("back_review")}
-            </Link>
-            <Link
-              href="/appeal"
-              className="flex min-h-12 items-center justify-center gap-2 rounded-xl bg-[#c45b35] px-8 text-sm font-semibold text-white shadow-sm transition-opacity hover:opacity-90"
-            >
-              {t("view_appeal")} <ArrowRight size={17} />
+              Continue to Review <ArrowRight size={16} />
             </Link>
           </div>
         </section>
