@@ -113,12 +113,11 @@ function normalizeResult(query: string, result: Partial<RtiState>): RtiState {
 export async function POST(request: Request) {
   const body = (await request.json().catch(() => null)) as { query?: unknown } | null;
   const query = typeof body?.query === "string" ? body.query : "";
-  const isScholarshipQuery = /scholarship|merit|sanction order|disbursement|student grant/i.test(query);
-
-  if (isScholarshipQuery) {
-    return Response.json(offlineState(query));
-  }
-
+ // REMOVE OR COMMENT THESE 4 LINES:
+// const isScholarshipQuery = /scholarship|merit|sanction order|disbursement|student grant/i.test(query);
+// if (isScholarshipQuery) {
+//   return Response.json(offlineState(query));
+// }
   const apiKey = process.env.GROQ_API_KEY || process.env.OPENAI_API_KEY;
 
   if (!query.trim() || !apiKey) {

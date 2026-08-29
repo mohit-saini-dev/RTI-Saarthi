@@ -1,8 +1,8 @@
 "use client";
 
-import { ArrowRight, Check, ClipboardList, Pencil, ShieldCheck } from "lucide-react";
-import Link from "next/link";
 import { useEffect, useState } from "react";
+import Link from "next/link";
+import { ArrowLeft, ArrowRight, Check, ClipboardList, Pencil, ShieldCheck, Sparkles } from "lucide-react";
 import { type RtiState } from "@/src/lib/types";
 import { readRtiState, writeRtiState } from "@/src/lib/client-state";
 import { useLanguage } from "../../context/LanguageContext";
@@ -12,15 +12,25 @@ export default function QuestionPage() {
   const [isEditing, setIsEditing] = useState(false);
   const [state, setState] = useState<RtiState | null>(null);
   const [requests, setRequests] = useState<string[]>([]);
-  const defaultRequests = [t("request_1"), t("request_2"), t("request_3"), t("request_4")];
+
+  // Domain-neutral statutory fallbacks (no hardcoded scholarship or road text)
+  const neutralDefaultRequests = [
+    "Certified true copies of administrative approvals, sanction orders, and file notings related to the stated project/matter.",
+    "Authenticated statement of total budget allocated, funds released, and official utilization certificates submitted to date.",
+    "Certified copies of inspection logs, field inquiry reports, and completion records entered in the official register.",
+    "Name, official designation, and contact details of the competent authority responsible for executing this public action."
+  ];
 
   useEffect(() => {
-    const currentState = readRtiState();
     // Hydrate browser-only localStorage state after the initial render.
     // eslint-disable-next-line react-hooks/set-state-in-effect
+    const currentState = readRtiState();
     setState(currentState);
-    if (currentState?.restructuredRequests?.length) {
+
+    if (currentState?.restructuredRequests && currentState.restructuredRequests.length > 0) {
       setRequests(currentState.restructuredRequests);
+    } else {
+      setRequests(neutralDefaultRequests);
     }
   }, []);
 
@@ -33,9 +43,12 @@ export default function QuestionPage() {
     }
   };
 
+  const displayRequests = requests.length > 0 ? requests : neutralDefaultRequests;
+
   return (
     <main className="min-h-screen bg-[#f5f1e8] text-[#173c38]">
-      <div className="mx-auto flex min-h-screen w-full max-w-7xl flex-col px-6 py-6 sm:px-10 lg:px-14">
+      <div className="mx-auto flex min-h-screen w-full max-w-7xl flex-col px-6 py-6 sm:px-10 lg:px-12">
+        {/* Header */}
         <header className="flex items-center justify-between border-b border-[#173c38]/15 pb-5">
           <Link href="/" className="flex items-center gap-3">
             <div className="flex size-10 items-center justify-center rounded-xl bg-[#173c38] text-[#f5f1e8]">
@@ -52,54 +65,80 @@ export default function QuestionPage() {
           </div>
         </header>
 
-        <section className="mx-auto flex w-full max-w-4xl flex-1 flex-col justify-center py-14 lg:py-20">
-          <div className="mb-7 flex items-center gap-2 text-sm font-semibold text-[#c45b35]">
-            <ShieldCheck size={17} />
-            {t("screen3_badge")}
+        {/* Content */}
+        <section className="mx-auto flex w-full max-w-4xl flex-1 flex-col justify-center py-12 pb-28">
+          {/* AI Differentiation Badge */}
+          <div className="mb-4 flex items-center gap-2 text-sm font-semibold text-[#c45b35]">
+            <Sparkles size={17} />
+            <span>✦ AI-Restructured Under Section 2(f)</span>
           </div>
-          <h1 className="max-w-3xl text-4xl leading-[1.05] font-semibold tracking-[-0.035em] sm:text-6xl">
+
+          <h1 className="max-w-3xl text-4xl leading-[1.08] font-semibold tracking-[-0.035em] sm:text-5xl">
             {t("structured_requests_title")}
           </h1>
-          <p className="mt-7 max-w-3xl text-lg leading-8 text-[#173c38]/70">
+          <p className="mt-5 max-w-3xl text-lg leading-8 text-[#173c38]/70">
             {t("structured_requests_desc")}
           </p>
 
+          {/* Restructured Legal Requests */}
           <div className="mt-10 space-y-3">
-            {(requests.length ? requests : defaultRequests).map((request, index) => (
-              <div key={index} className="flex items-center gap-4 rounded-2xl border border-[#173c38]/10 bg-[#fffdf8] px-5 py-4 shadow-[0_12px_30px_rgba(23,60,56,0.06)]">
-                <span className="flex size-9 shrink-0 items-center justify-center rounded-full bg-[#e5eee4] text-sm font-bold text-[#27745e]">
+            {displayRequests.map((request, index) => (
+              <div
+                key={index}
+                className="flex items-center gap-4 rounded-2xl border border-[#173c38]/10 bg-white p-5 shadow-sm"
+              >
+                <span className="flex size-9 shrink-0 items-center justify-center rounded-full bg-[#e5eee4] text-xs font-bold text-[#27745e]">
                   {index + 1}
                 </span>
                 {isEditing ? (
                   <input
                     aria-label={`Record request ${index + 1}`}
                     value={request}
-                    onChange={(e) =>
-                      setRequests((current) =>
-                        current.map((item, i) => (i === index ? e.target.value : item))
-                      )
-                    }
-                    className="min-w-0 flex-1 border-b border-[#c45b35] bg-transparent py-1 text-base leading-7 outline-none"
+                    onChange={(e) => {
+                      const updated = [...displayRequests];
+                      updated[index] = e.target.value;
+                      setRequests(updated);
+                    }}
+                    className="min-w-0 flex-1 border-b border-[#c45b35] bg-transparent py-1 text-base font-medium text-[#173c38] focus:outline-none"
                   />
                 ) : (
-                  <p className="text-base leading-7 font-medium">{request}</p>
+                  <p className="text-base font-medium leading-7 text-[#173c38]">
+                    {request}
+                  </p>
                 )}
               </div>
             ))}
           </div>
 
-          <div className="mt-10 flex flex-col-reverse gap-3 sm:flex-row sm:items-center sm:justify-between">
+          {/* Edit / Customize Bar */}
+          <div className="mt-6 flex items-center justify-between rounded-xl border border-[#173c38]/10 bg-[#fffdf8] px-4 py-3 text-xs text-[#173c38]/70">
+            <span>
+              {isEditing
+                ? "Editing mode active: Make statutory adjustments as required."
+                : "PIOs reject general questions. These 4 queries explicitly demand certified material records under Section 2(f)."}
+            </span>
             <button
               type="button"
               onClick={() => (isEditing ? handleDoneEditing() : setIsEditing(true))}
-              className="flex min-h-12 items-center justify-center gap-2 rounded-xl border border-[#173c38]/20 px-5 py-3 text-sm font-bold transition hover:border-[#173c38] hover:bg-white"
+              className="flex items-center gap-1.5 font-bold text-[#c45b35] hover:opacity-80 transition"
             >
-              {isEditing ? <Check size={16} /> : <Pencil size={16} />}
+              {isEditing ? <Check size={15} /> : <Pencil size={15} />}
               {isEditing ? t("done_editing") : t("edit")}
             </button>
+          </div>
+
+          {/* Navigation Controls */}
+          <div className="mt-10 flex flex-col items-center justify-between gap-4 sm:flex-row">
+            <Link
+              href="/understand"
+              className="flex min-h-12 items-center justify-center gap-2 rounded-xl border border-[#173c38]/20 px-6 text-sm font-semibold text-[#173c38] transition-colors hover:bg-[#173c38]/5"
+            >
+              <ArrowLeft size={16} /> Back
+            </Link>
+
             <Link
               href="/authority"
-              className="flex min-h-12 items-center justify-center gap-2 rounded-xl bg-[#c45b35] px-5 py-3 text-center text-sm font-bold text-white transition hover:bg-[#a94728]"
+              className="flex min-h-12 items-center justify-center gap-2 rounded-xl bg-[#c45b35] px-8 text-sm font-semibold text-white shadow-sm transition-opacity hover:opacity-90"
             >
               {t("use_records")} <ArrowRight size={17} />
             </Link>

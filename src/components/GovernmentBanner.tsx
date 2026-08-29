@@ -5,33 +5,25 @@ import { useLanguage, LanguageCode } from "../context/LanguageContext";
 
 const languages: { code: LanguageCode; label: string }[] = [
   { code: "en", label: "English" },
-  { code: "hi", label: "हिन्दी (Hindi)" },
-  { code: "bn", label: "বাংলা (Bengali)" },
-  { code: "te", label: "తెలుగు (Telugu)" },
-  { code: "mr", label: "मराठी (Marathi)" },
-  { code: "ta", label: "தமிழ் (Tamil)" },
-  { code: "gu", label: "ગુજરાતી (Gujarati)" },
-  { code: "kn", label: "ಕನ್ನಡ (Kannada)" },
-  { code: "ml", label: "മലയാളം (Malayalam)" },
-  { code: "pa", label: "ਪੰਜਾਬੀ (Punjabi)" }
+  { code: "hi", label: "हिन्दी (Hindi)" }
 ];
 
 export default function GovernmentBanner() {
-  const { language, setLanguage, t } = useLanguage();
+  const { language, setLanguage } = useLanguage();
 
   return (
     <header className="bg-emerald-950 text-white border-b border-emerald-900 px-4 py-2.5">
       <div className="max-w-7xl mx-auto flex flex-wrap items-center justify-between gap-3 text-xs sm:text-sm">
         <div className="flex items-center gap-2 font-medium tracking-wide">
-          <span className="w-2 h-2 rounded-full bg-emerald-400 inline-block animate-pulse"></span>
-          <span>{t("portalTitle")}</span>
+          <span className="w-2 h-2 rounded-full bg-emerald-400 inline-block animate-pulse" />
+          <span>RTI Saarthi • Pre-Filing Statutory Intelligence Layer</span>
         </div>
 
         <div className="flex items-center gap-4">
           <select
             value={language}
             onChange={(e) => setLanguage(e.target.value as LanguageCode)}
-            className="bg-emerald-900/80 text-white border border-emerald-700/60 rounded px-2.5 py-1 text-xs focus:outline-none focus:ring-1 focus:ring-emerald-400 cursor-pointer"
+            className="bg-emerald-900 text-white border border-emerald-700 rounded px-2 py-1 text-xs focus:outline-none focus:ring-1 focus:ring-emerald-400 cursor-pointer"
             aria-label="Select Language"
           >
             {languages.map((lang) => (
@@ -42,7 +34,7 @@ export default function GovernmentBanner() {
           </select>
 
           <span className="text-emerald-200/80 hover:text-white cursor-pointer transition">
-            {t("aboutRti")}
+            RTI Act, 2005
           </span>
         </div>
       </div>
