@@ -2,9 +2,8 @@ import type { Metadata } from "next";
 import type { ReactNode } from "react";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
-import GovernmentBanner from "@/src/components/GovernmentBanner";
 import FaqAssistant from "@/src/components/FaqAssistant";
-import { LanguageProvider } from "../context/LanguageContext";
+import { LanguageProvider } from "@/src/context/LanguageContext";
 import DisclaimerBanner from "@/src/components/DisclaimerBanner";
 
 const geistSans = Geist({ variable: "--font-geist-sans", subsets: ["latin"] });
@@ -21,7 +20,6 @@ export default function RootLayout({ children }: { children: ReactNode }) {
       <body className="min-h-full">
         <LanguageProvider>
           <DisclaimerBanner />
-          <GovernmentBanner />
           {children}
           <FaqAssistant />
         </LanguageProvider>
