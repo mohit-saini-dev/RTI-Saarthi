@@ -15,8 +15,8 @@ Filing a Right to Information (RTI) request under the RTI Act, 2005 often presen
 
 **RTI-Saarthi** acts as an intelligent digital assistant that converts informal, plain-language citizen questions into structured, legally aligned records requests under Section 6(1) of the RTI Act.
 
-🔗 **Live Deployment:** [rti-saarthi.vercel.app](https://rti-saarthi.vercel.app)  
-📖 **System Architecture:** Detailed screen specs & state flow available in [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).
+- 🔗 **Live Deployment:** [rti-saarthi.vercel.app](https://rti-saarthi.vercel.app)  
+- 📖 **System Architecture:** Detailed screen specs & state flow available in [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)
 
 ---
 
